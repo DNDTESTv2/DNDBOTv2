@@ -20,6 +20,14 @@ if [ -d "DndBot" ]; then
     rm -rf DndBot
 fi
 
+# Configuración temporal de credenciales Git
+echo "🔐 Configurando credenciales temporales..."
+if [ -n "$GIT_USERNAME" ] && [ -n "$GIT_TOKEN" ]; then
+    git config --global credential.helper store
+    echo "https://$GIT_USERNAME:$GIT_TOKEN@github.com" > ~/.git-credentials
+    chmod 600 ~/.git-credentials
+fi
+
 # Clonar el repositorio
 echo "📦 Clonando repositorio..."
 git clone https://github.com/DNDTESTv2/DndBot.git || {
