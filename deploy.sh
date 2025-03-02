@@ -37,9 +37,9 @@ if ! command -v node &> /dev/null || ! command -v npm &> /dev/null; then
 fi
 
 # Limpiar instalación previa si existe
-if [ -d "DndBot" ]; then
+if [ -d "DNDBOTv2" ]; then
     echo "🧹 Limpiando instalación previa..."
-    rm -rf DndBot
+    rm -rf DNDBOTv2
 fi
 
 # Configuración temporal de credenciales Git
@@ -52,11 +52,11 @@ fi
 
 # Clonar el repositorio
 echo "📦 Clonando repositorio..."
-git clone https://github.com/DNDTESTv2/DndBot.git || {
+git clone https://github.com/DNDTESTv2/DNDBOTv2.git || {
     echo "❌ Error al clonar el repositorio"
     exit 1
 }
-cd DndBot || exit 1
+cd DNDBOTv2 || exit 1
 
 # Instalar dependencias
 echo "📚 Instalando dependencias..."

@@ -38,7 +38,7 @@ export AWS_REGION="tu_aws_region"
 
 2. Ejecuta el script de despliegue automatizado:
 ```bash
-curl -o- https://raw.githubusercontent.com/DNDTESTv2/DndBot/main/deploy.sh | bash
+curl -o- https://raw.githubusercontent.com/DNDTESTv2/DNDBOTv2/main/deploy.sh | bash
 ```
 
 El script se encargará de:
@@ -51,8 +51,8 @@ El script se encargará de:
 
 1. Clona el repositorio:
 ```bash
-git clone https://github.com/DNDTESTv2/DndBot.git
-cd DndBot
+git clone https://github.com/DNDTESTv2/DNDBOTv2.git
+cd DNDBOTv2
 ```
 
 2. Instala las dependencias:
