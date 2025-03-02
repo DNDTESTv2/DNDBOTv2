@@ -23,6 +23,7 @@ export default function registerCharacterCommands(
         .setDescription("Clase del personaje")
         .setRequired(true)
         .addChoices(
+          { name: 'Artifice', value: 'artifice' },
           { name: 'Bárbaro', value: 'barbaro' },
           { name: 'Bardo', value: 'bardo' },
           { name: 'Clérigo', value: 'clerigo' },
@@ -40,15 +41,24 @@ export default function registerCharacterCommands(
         .setDescription("Raza del personaje")
         .setRequired(true)
         .addChoices(
-          { name: 'Humano', value: 'humano' },
+          { name: 'Acompañante', value: 'acompanante' },
+          { name: 'Dhamphiro', value: 'dhamphiro' },
+          { name: 'Draconido', value: 'draconido' },
+          { name: 'Draconido Cromatico', value: 'draconido_cromatico' },
+          { name: 'Draconido Gema', value: 'draconido_gema' },
+          { name: 'Draconido Metalico', value: 'draconido_metalico' },
           { name: 'Elfo', value: 'elfo' },
           { name: 'Enano', value: 'enano' },
-          { name: 'Mediano', value: 'mediano' },
           { name: 'Gnomo', value: 'gnomo' },
+          { name: 'Humano', value: 'humano' },
+          { name: 'Linaje Personalizado', value: 'linaje_personalizado' },
+          { name: 'Mediano', value: 'mediano' },
+          { name: 'Renacido', value: 'renacido' },
+          { name: 'Sangre Malefica', value: 'sangre_malefica' },
           { name: 'Semielfo', value: 'semielfo' },
           { name: 'Semiorco', value: 'semiorco' },
-          { name: 'Dracónido', value: 'draconido' },
-          { name: 'Tiefling', value: 'tiefling' }
+          { name: 'Tiefling', value: 'tiefling' },
+          { name: 'Tiefling Variante', value: 'tiefling_variante' }
         ))
     .addStringOption(option =>
       option.setName("rango")
@@ -116,22 +126,24 @@ export default function registerCharacterCommands(
 
   client.on("interactionCreate", async interaction => {
     if (interaction.isAutocomplete()) {
-      if (interaction.commandName === "editar-personaje" && interaction.options.getFocused().name === "nombre") {
-        try {
-          const characters = await storage.getCharacters(interaction.guildId!);
-          const userCharacters = characters.filter(c => c.userId === interaction.user.id);
-          const focusedValue = interaction.options.getFocused().value.toLowerCase();
-          const filtered = userCharacters
-            .filter(char => char.name.toLowerCase().includes(focusedValue))
-            .map(char => ({
-              name: char.name,
-              value: char.name
-            }));
+      if (interaction.commandName === "editar-personaje") {
+        const focusedOption = interaction.options.getFocused(true);
+        if (focusedOption.name === "nombre") {
+          try {
+            const characters = await storage.getCharacters(interaction.guildId!);
+            const userCharacters = characters.filter(c => c.userId === interaction.user.id);
+            const filtered = userCharacters
+              .filter(char => char.name.toLowerCase().includes(focusedOption.value.toLowerCase()))
+              .map(char => ({
+                name: char.name,
+                value: char.name
+              }));
 
-          await interaction.respond(filtered.slice(0, 25));
-        } catch (error) {
-          console.error("Error in autocomplete:", error);
-          await interaction.respond([]);
+            await interaction.respond(filtered.slice(0, 25));
+          } catch (error) {
+            console.error("Error in autocomplete:", error);
+            await interaction.respond([]);
+          }
         }
       }
       return;
@@ -157,8 +169,6 @@ export default function registerCharacterCommands(
           class: characterClass,
           race,
           rank,
-          languages: [],
-          alignment: 'neutral',
           imageUrl,
           n20Url
         });
@@ -177,7 +187,7 @@ export default function registerCharacterCommands(
           .setColor('#00ff00')
           .setImage(imageUrl);
 
-        await interaction.reply({ embeds: [embed], flags: 0 });
+        await interaction.reply({ embeds: [embed] });
       } catch (error) {
         console.error("Error al crear personaje:", error);
         await interaction.reply({
@@ -194,8 +204,7 @@ export default function registerCharacterCommands(
 
         if (userCharacters.length === 0) {
           await interaction.reply({
-            content: `${interaction.user.username} no tiene personajes creados aún.`,
-            flags: 0
+            content: `${interaction.user.username} no tiene personajes creados aún.`
           });
           return;
         }
@@ -226,8 +235,7 @@ export default function registerCharacterCommands(
 
         await interaction.reply({
           content: `**Personajes de ${interaction.user.username}** (${userCharacters.length}):`,
-          embeds: embeds,
-          flags: 0
+          embeds: embeds
         });
       } catch (error) {
         console.error("Error al obtener personajes:", error);
@@ -279,8 +287,6 @@ export default function registerCharacterCommands(
         const newLevel = interaction.options.getInteger("nivel");
         const newRank = interaction.options.getString("rango");
 
-
-
         const characters = await storage.getCharacters(interaction.guildId!);
         const character = characters.find(
           c => c.userId === interaction.user.id && c.name.toLowerCase() === name.toLowerCase()
@@ -319,7 +325,7 @@ export default function registerCharacterCommands(
           embed.setImage(character.imageUrl);
         }
 
-        await interaction.reply({ embeds: [embed], flags: 0 });
+        await interaction.reply({ embeds: [embed] });
       } catch (error) {
         console.error("Error al editar personaje:", error);
         await interaction.reply({
