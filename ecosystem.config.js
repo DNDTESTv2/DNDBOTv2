@@ -14,6 +14,8 @@ module.exports = {
     max_restarts: 10,
     autorestart: true,
     instances: 1,
-    exec_mode: "fork"
+    exec_mode: "fork",
+    merge_logs: true,
+    log_date_format: "YYYY-MM-DD HH:mm:ss Z"
   }]
 }

@@ -11,6 +11,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Middleware de logging
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -41,6 +42,7 @@ app.use((req, res, next) => {
   next();
 });
 
+// Función principal de inicio
 (async () => {
   try {
     console.log("🔄 Iniciando aplicación...");
@@ -62,12 +64,12 @@ app.use((req, res, next) => {
 
     const server = await registerRoutes(app);
 
+    // Manejador global de errores
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
       console.error("❌ Error en la aplicación:", err);
       res.status(status).json({ message });
-      throw err;
     });
 
     if (app.get("env") === "development") {
@@ -76,17 +78,27 @@ app.use((req, res, next) => {
       serveStatic(app);
     }
 
-    const port = 5000;
+    const port = process.env.PORT || 5000;
     server.listen({
       port,
       host: "0.0.0.0",
       reusePort: true,
     }, () => {
-      const replUrl = `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`;
-      log(`✅ Servidor iniciado en puerto ${port}`);
-      log(`📡 URL del Repl: ${replUrl}`);
-      log(`🔗 URL para UptimeRobot: ${replUrl}/ping`);
+      console.log(`✅ Servidor iniciado en puerto ${port}`);
     });
+
+    // Manejo de señales de terminación
+    const signals = ['SIGTERM', 'SIGINT'];
+    signals.forEach(signal => {
+      process.on(signal, async () => {
+        console.log(`\n${signal} recibido. Iniciando apagado graceful...`);
+        server.close(() => {
+          console.log('Servidor HTTP cerrado.');
+          process.exit(0);
+        });
+      });
+    });
+
   } catch (error) {
     console.error("❌ Error fatal durante el inicio de la aplicación:", error);
     process.exit(1);
