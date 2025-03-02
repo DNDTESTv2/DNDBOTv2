@@ -19,13 +19,21 @@ echo "📦 Verificando Node.js y npm..."
 if ! command -v node &> /dev/null || ! command -v npm &> /dev/null; then
     echo "⚙️ Instalando Node.js y npm..."
     sudo apt-get update
+    sudo apt-get install -y curl
     curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-    sudo apt-get install -y nodejs
-    sudo apt-get install -y git
+    sudo apt-get install -y nodejs git
 
     # Verificar la instalación
-    node --version
-    npm --version
+    if ! command -v node &> /dev/null; then
+        echo "❌ Error: No se pudo instalar Node.js"
+        exit 1
+    fi
+    if ! command -v npm &> /dev/null; then
+        echo "❌ Error: No se pudo instalar npm"
+        exit 1
+    fi
+
+    echo "✅ Node.js $(node --version) y npm $(npm --version) instalados correctamente"
 fi
 
 # Limpiar instalación previa si existe
