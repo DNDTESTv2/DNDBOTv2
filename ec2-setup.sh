@@ -14,9 +14,32 @@ sudo apt install -y nodejs git
 echo "Node.js version: $(node --version)"
 echo "NPM version: $(npm --version)"
 
+# Generar clave SSH sin email asociado
+echo "Generando clave SSH para deploy..."
+mkdir -p /home/ubuntu/.ssh
+ssh-keygen -t ed25519 -f /home/ubuntu/.ssh/github_deploy -N ""
+chmod 600 /home/ubuntu/.ssh/github_deploy*
+
+# Configurar SSH para usar la clave con GitHub
+cat > /home/ubuntu/.ssh/config << EOF
+Host github.com
+  IdentityFile /home/ubuntu/.ssh/github_deploy
+  User git
+EOF
+chmod 600 /home/ubuntu/.ssh/config
+
+# Mostrar la clave pública para añadirla en GitHub
+echo "===================================================="
+echo "CLAVE SSH PÚBLICA (añadir como deploy key en GitHub):"
+echo "===================================================="
+cat /home/ubuntu/.ssh/github_deploy.pub
+echo "===================================================="
+echo "Después de añadir esta clave en GitHub, presiona Enter para continuar..."
+read -p ""
+
 # Clonar el repositorio
 cd /home/ubuntu
-git clone git@github.com:cenacu/discord-dnd.git
+GIT_SSH_COMMAND="ssh -i /home/ubuntu/.ssh/github_deploy -o StrictHostKeyChecking=accept-new" git clone git@github.com:cenacu/discord-dnd.git
 cd discord-dnd
 
 # Instalar dependencias
@@ -56,4 +79,8 @@ echo "Para verificar el estado del bot:"
 echo "sudo systemctl status discord-bot"
 echo "Para ver los logs del bot:"
 echo "journalctl -u discord-bot -f"
+echo ""
+echo "📝 La clave SSH generada está en:"
+echo "  - Privada: /home/ubuntu/.ssh/github_deploy"
+echo "  - Pública: /home/ubuntu/.ssh/github_deploy.pub"
 echo "============================================"
