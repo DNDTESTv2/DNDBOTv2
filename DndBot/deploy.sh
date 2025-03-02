@@ -14,20 +14,6 @@ if [ -z "$DISCORD_TOKEN" ] || [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_A
     exit 1
 fi
 
-# Instalar Node.js y npm si no están instalados
-echo "📦 Verificando Node.js y npm..."
-if ! command -v node &> /dev/null || ! command -v npm &> /dev/null; then
-    echo "⚙️ Instalando Node.js y npm..."
-    sudo apt-get update
-    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-    sudo apt-get install -y nodejs
-    sudo apt-get install -y git
-
-    # Verificar la instalación
-    node --version
-    npm --version
-fi
-
 # Limpiar instalación previa si existe
 if [ -d "DndBot" ]; then
     echo "🧹 Limpiando instalación previa..."
@@ -56,7 +42,7 @@ npm install || {
     echo "❌ Error al instalar dependencias"
     exit 1
 }
-sudo npm install -g pm2 || {
+npm install -g pm2 || {
     echo "❌ Error al instalar PM2"
     exit 1
 }
