@@ -230,7 +230,7 @@ export default function registerCurrencyCommands(
 
         // Select random currency and amount
         const randomCurrency = currencies[Math.floor(Math.random() * currencies.length)];
-        const earnedAmount = Math.floor(Math.random() * 41) + 10; // Random between 10 and 50
+        const earnedAmount = Math.floor(Math.random() * 91) + 10; // Random between 10 and 100
 
         // Update wallet with new amount and last worked time
         const updatedWallet = { ...wallet.wallet };
@@ -339,7 +339,7 @@ export default function registerCurrencyCommands(
 
         // Determinar cantidad a robar (entre 1 y 50% del balance de la víctima)
         const victimBalance = fromWallet.wallet[randomCurrency.name] || 0;
-        const maxSteal = Math.floor(victimBalance * 0.5);
+        const maxSteal = Math.min(10, Math.floor(victimBalance * 0.5)); // Máximo 10 o 50% del balance, lo que sea menor
         const amountStolen = Math.floor(Math.random() * maxSteal) + 1;
 
         // Actualizar billeteras
