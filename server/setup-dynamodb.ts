@@ -20,7 +20,7 @@ const tables = [
           { AttributeName: "id", KeyType: "HASH" as const }
         ],
         Projection: {
-          ProjectionType: "ALL"
+          ProjectionType: "ALL" as const
         },
         ProvisionedThroughput: {
           ReadCapacityUnits: 5,
@@ -51,7 +51,7 @@ const tables = [
           { AttributeName: "id", KeyType: "HASH" as const }
         ],
         Projection: {
-          ProjectionType: "ALL"
+          ProjectionType: "ALL" as const
         },
         ProvisionedThroughput: {
           ReadCapacityUnits: 5,
@@ -95,7 +95,7 @@ const tables = [
           { AttributeName: "id", KeyType: "HASH" as const }
         ],
         Projection: {
-          ProjectionType: "ALL"
+          ProjectionType: "ALL" as const
         },
         ProvisionedThroughput: {
           ReadCapacityUnits: 5,
@@ -126,7 +126,7 @@ const tables = [
           { AttributeName: "id", KeyType: "HASH" as const }
         ],
         Projection: {
-          ProjectionType: "ALL"
+          ProjectionType: "ALL" as const
         },
         ProvisionedThroughput: {
           ReadCapacityUnits: 5,

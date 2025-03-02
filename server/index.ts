@@ -1,3 +1,7 @@
+import dotenv from "dotenv";
+// Cargar variables de entorno antes que cualquier otra importación
+dotenv.config();
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -40,6 +44,16 @@ app.use((req, res, next) => {
 (async () => {
   try {
     console.log("🔄 Iniciando aplicación...");
+
+    // Verificar variables de entorno críticas
+    const requiredEnvVars = ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_REGION', 'DISCORD_TOKEN'];
+    const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+    if (missingEnvVars.length > 0) {
+      console.error("❌ Faltan las siguientes variables de entorno:");
+      missingEnvVars.forEach(varName => console.error(`   - ${varName}`));
+      throw new Error("Variables de entorno faltantes");
+    }
 
     // Configurar DynamoDB primero
     console.log("⏳ Configurando DynamoDB...");
