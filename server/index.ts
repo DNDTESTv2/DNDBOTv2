@@ -80,12 +80,12 @@ app.use((req, res, next) => {
 
     // Intentar puertos alternativos si el principal está en uso
     const ports = [process.env.PORT || 3000, 3001, 3002];
-    let port;
+    let port: number;
     let serverStarted = false;
 
     for (port of ports) {
       try {
-        await new Promise((resolve, reject) => {
+        await new Promise<boolean>((resolve, reject) => {
           server.listen({
             port,
             host: "0.0.0.0",
@@ -94,7 +94,7 @@ app.use((req, res, next) => {
             console.log(`✅ Servidor iniciado en puerto ${port}`);
             serverStarted = true;
             resolve(true);
-          }).on('error', (err) => {
+          }).on('error', (err: Error & { code?: string }) => {
             if (err.code === 'EADDRINUSE') {
               console.log(`⚠️ Puerto ${port} en uso, intentando siguiente...`);
               resolve(false);
