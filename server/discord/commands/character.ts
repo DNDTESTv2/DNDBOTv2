@@ -125,30 +125,6 @@ export default function registerCharacterCommands(
   commands.set(editCharacterCommand.name, editCharacterCommand.toJSON());
 
   client.on("interactionCreate", async interaction => {
-    if (interaction.isAutocomplete()) {
-      if (interaction.commandName === "editar-personaje") {
-        const focusedOption = interaction.options.getFocused(true);
-        if (focusedOption.name === "nombre") {
-          try {
-            const characters = await storage.getCharacters(interaction.guildId!);
-            const userCharacters = characters.filter(c => c.userId === interaction.user.id);
-            const filtered = userCharacters
-              .filter(char => char.name.toLowerCase().includes(focusedOption.value.toLowerCase()))
-              .map(char => ({
-                name: char.name,
-                value: char.name
-              }));
-
-            await interaction.respond(filtered.slice(0, 25));
-          } catch (error) {
-            console.error("Error in autocomplete:", error);
-            await interaction.respond([]);
-          }
-        }
-      }
-      return;
-    }
-
     if (!interaction.isChatInputCommand()) return;
 
     if (interaction.commandName === "crear-personaje") {
@@ -160,6 +136,20 @@ export default function registerCharacterCommands(
         const rank = interaction.options.getString("rango", true);
         const imageUrl = interaction.options.getString("imagen", true); 
         const n20Url = interaction.options.getString("n20", true); 
+
+        // Verificar si ya existe un personaje con el mismo nombre para este usuario
+        const existingCharacters = await storage.getCharacters(interaction.guildId!);
+        const existingCharacter = existingCharacters.find(
+          c => c.userId === interaction.user.id && c.name.toLowerCase() === name.toLowerCase()
+        );
+
+        if (existingCharacter) {
+          await interaction.reply({
+            content: `Ya tienes un personaje llamado "${name}". Por favor, elige otro nombre.`,
+            flags: MessageFlags.Ephemeral
+          });
+          return;
+        }
 
         const character = await storage.createCharacter({
           guildId: interaction.guildId!,
@@ -245,7 +235,6 @@ export default function registerCharacterCommands(
         });
       }
     }
-
 
     if (interaction.commandName === "eliminar-personaje") {
       try {
