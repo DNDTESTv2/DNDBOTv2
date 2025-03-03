@@ -23,6 +23,11 @@ echo "📥 Descargando cambios del repositorio..."
 git fetch origin main
 git reset --hard origin/main
 
+# Limpiar node_modules y reinstalar dependencias
+echo "🧹 Limpiando instalación anterior..."
+rm -rf node_modules
+rm -f package-lock.json
+
 # Instalar dependencias si hay cambios
 echo "📦 Instalando dependencias..."
 npm install
