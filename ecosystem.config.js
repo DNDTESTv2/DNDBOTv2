@@ -1,1 +1,2 @@
-// Este archivo ya no es necesario y ha sido eliminado
+
+// Este archivo ha sido eliminado ya que no se requiere PM2

@@ -291,8 +291,8 @@ export class DynamoDBStorage implements IStorage {
       languages: []
     };
 
-    // Utilizamos un identificador único para cada personaje (combinando userId con nombre o id)
-    const characterId = `${character.userId}_${newCharacter.id}`;
+    // Utilizamos un identificador único para cada personaje
+    const characterId = `${character.userId}_${character.name}_${newCharacter.id}`;
     
     await docClient.send(
       new PutCommand({

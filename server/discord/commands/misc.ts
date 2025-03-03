@@ -1,16 +1,15 @@
-import { Client, Collection, RESTPostAPIChatInputApplicationCommandsJSONBody } from "discord.js";
 
-export default function registerMiscCommands(
+import { Client, Collection, SlashCommandBuilder, RESTPostAPIChatInputApplicationCommandsJSONBody } from "discord.js";
+
+export function configureMiscCommands(
   client: Client, 
   commands: Collection<string, RESTPostAPIChatInputApplicationCommandsJSONBody>
 ) {
-  // Los comandos ping y hola han sido eliminados
-
-  // No hay comandos para registrar en esta categoría
-
+  // No registramos los comandos ping y hola
+  
   client.on("interactionCreate", async interaction => {
     if (!interaction.isChatInputCommand()) return;
-
-    // Los manejadores de comandos ping y hola han sido eliminados
+    
+    // Sin manejadores para ping y hola
   });
 }

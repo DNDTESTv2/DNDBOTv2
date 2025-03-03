@@ -1,15 +1,19 @@
-import { Client, Collection, REST, Routes, SlashCommandBuilder } from "discord.js";
+import { Client, Collection, REST, Routes, SlashCommandBuilder, RESTPostAPIChatInputApplicationCommandsJSONBody } from "discord.js";
 import { configureCharacterCommands } from "./character";
 import { configureMoneyCommands } from "./money";
+import { configureMiscCommands } from "./misc"; 
 
 export async function registerCommands(client: Client, token: string, clientId: string) {
-  const commands = new Collection<string, any>();
+  const commands = new Collection<string, RESTPostAPIChatInputApplicationCommandsJSONBody>();
 
   // Configurar comandos de personajes
-  await configureCharacterCommands(client, commands);
+  configureCharacterCommands(client, commands);
 
   // Configurar comandos de moneda
-  await configureMoneyCommands(client, commands);
+  configureMoneyCommands(client, commands);
+  
+  // Configurar comandos misceláneos (sin ping y hola)
+  configureMiscCommands(client, commands);
 
   // Registrar todos los comandos con la API de Discord
   const rest = new REST({ version: "10" }).setToken(token);
