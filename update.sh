@@ -4,7 +4,8 @@ echo "🔄 Iniciando actualización del bot..."
 
 # Actualizar código desde GitHub
 echo "📥 Descargando cambios del repositorio..."
-git pull origin main
+git fetch origin main
+git reset --hard origin/main
 
 # Instalar dependencias si hay cambios
 echo "📦 Instalando dependencias..."
@@ -14,17 +15,18 @@ npm install
 echo "🛠️ Construyendo el proyecto..."
 npm run build
 
-# Verificar si el proceso existe en PM2
-if pm2 list | grep -q "discord-dnd-bot"; then
-    echo "🔄 Reiniciando bot en PM2..."
-    pm2 restart discord-dnd-bot --update-env
-else
-    echo "🆕 Iniciando bot en PM2 por primera vez..."
-    pm2 start dist/index.js --name discord-dnd-bot
+# Detener el bot existente si está corriendo
+if [ -f "bot.pid" ]; then
+    echo "🛑 Deteniendo el bot actual..."
+    kill $(cat bot.pid) 2>/dev/null || true
+    rm bot.pid
 fi
 
-# Mostrar logs
-echo "📋 Mostrando logs del bot..."
-pm2 logs discord-dnd-bot --lines 20
+# Iniciar el bot
+echo "🤖 Iniciando el bot..."
+nohup node dist/index.js > logs/bot.log 2>&1 &
+echo $! > bot.pid
 
 echo "✅ Actualización completada!"
+echo "Para ver los logs del bot: tail -f logs/bot.log"
+echo "Para detener el bot: kill $(cat bot.pid)"

@@ -38,7 +38,7 @@ export interface IStorage {
 
   // Character operations
   createCharacter(character: InsertCharacter): Promise<Character>;
-  getCharacter(guildId: string, userId: string): Promise<Character | undefined>;
+  getCharacter(guildId: string, userId: string, name?: string): Promise<Character | undefined>;
   getCharacters(guildId: string): Promise<Character[]>;
   updateCharacter(id: number, character: Partial<InsertCharacter>): Promise<Character>;
   deleteCharacter(id: number): Promise<boolean>;
@@ -281,7 +281,7 @@ export class DynamoDBStorage implements IStorage {
 
   async createCharacter(character: InsertCharacter): Promise<Character> {
     const newCharacter: Character = {
-      id: Date.now(), // ID único basado en timestamp
+      id: Date.now(),
       ...character,
       createdAt: new Date(),
       imageUrl: character.imageUrl ?? null,
@@ -291,15 +291,17 @@ export class DynamoDBStorage implements IStorage {
       languages: []
     };
 
-    // Utilizamos un identificador único para cada personaje
-    const characterId = `${character.userId}_${character.name}_${newCharacter.id}`;
-    
+    // Crear un ID único combinando userId, nombre y timestamp
+    const characterId = `${character.userId}_${character.name.toLowerCase()}_${newCharacter.id}`;
+
     await docClient.send(
       new PutCommand({
         TableName: TableNames.CHARACTERS,
         Item: {
           ...newCharacter,
-          characterId: characterId, // Añadir un ID único para este personaje
+          characterId,
+          guildId: character.guildId,
+          userId: character.userId,
           createdAt: newCharacter.createdAt.toISOString()
         }
       })
@@ -341,8 +343,6 @@ export class DynamoDBStorage implements IStorage {
   }
 
   async getCharacters(guildId: string): Promise<Character[]> {
-    // Utilizamos scan para asegurarnos de obtener todos los personajes
-    // Esto es temporal hasta que optimicemos la estructura de la tabla
     const response = await docClient.send(
       new QueryCommand({
         TableName: TableNames.CHARACTERS,
@@ -350,11 +350,11 @@ export class DynamoDBStorage implements IStorage {
         ExpressionAttributeValues: {
           ":guildId": guildId
         },
-        ScanIndexForward: false // Ordenar por fecha descendente (más recientes primero)
+        ScanIndexForward: false // Ordenar por fecha descendente
       })
     );
 
-    // Convertimos todas las fechas de string a Date
+    // Convertir todas las fechas de string a Date
     return (response.Items || []).map(character => ({
       ...character,
       createdAt: new Date(character.createdAt)
