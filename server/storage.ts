@@ -281,7 +281,7 @@ export class DynamoDBStorage implements IStorage {
 
   async createCharacter(character: InsertCharacter): Promise<Character> {
     const newCharacter: Character = {
-      id: Date.now(),
+      id: Date.now(), // ID único basado en timestamp
       ...character,
       createdAt: new Date(),
       imageUrl: character.imageUrl ?? null,
@@ -291,11 +291,15 @@ export class DynamoDBStorage implements IStorage {
       languages: []
     };
 
+    // Utilizamos un identificador único para cada personaje (combinando userId con nombre o id)
+    const characterId = `${character.userId}_${newCharacter.id}`;
+    
     await docClient.send(
       new PutCommand({
         TableName: TableNames.CHARACTERS,
         Item: {
           ...newCharacter,
+          characterId: characterId, // Añadir un ID único para este personaje
           createdAt: newCharacter.createdAt.toISOString()
         }
       })
@@ -304,19 +308,32 @@ export class DynamoDBStorage implements IStorage {
     return newCharacter;
   }
 
-  async getCharacter(guildId: string, userId: string): Promise<Character | undefined> {
+  async getCharacter(guildId: string, userId: string, name?: string): Promise<Character | undefined> {
     const response = await docClient.send(
       new QueryCommand({
         TableName: TableNames.CHARACTERS,
-        KeyConditionExpression: "guildId = :guildId and userId = :userId",
+        KeyConditionExpression: "guildId = :guildId",
+        FilterExpression: "userId = :userId" + (name ? " AND contains(#name, :name)" : ""),
         ExpressionAttributeValues: {
           ":guildId": guildId,
-          ":userId": userId
-        }
+          ":userId": userId,
+          ...(name ? { ":name": name } : {})
+        },
+        ExpressionAttributeNames: name ? { "#name": "name" } : undefined
       })
     );
 
-    const character = response.Items?.[0];
+    // Si se busca por nombre, encontrar el que coincide exactamente o el primero
+    let character;
+    if (name && response.Items && response.Items.length > 0) {
+      character = response.Items.find(c => 
+        c.name.toLowerCase() === name.toLowerCase()
+      ) || response.Items[0];
+    } else {
+      // Si no hay nombre o no hay resultados, tomamos el primer personaje
+      character = response.Items?.[0];
+    }
+
     return character ? {
       ...character,
       createdAt: new Date(character.createdAt)
@@ -324,16 +341,20 @@ export class DynamoDBStorage implements IStorage {
   }
 
   async getCharacters(guildId: string): Promise<Character[]> {
+    // Utilizamos scan para asegurarnos de obtener todos los personajes
+    // Esto es temporal hasta que optimicemos la estructura de la tabla
     const response = await docClient.send(
       new QueryCommand({
         TableName: TableNames.CHARACTERS,
         KeyConditionExpression: "guildId = :guildId",
         ExpressionAttributeValues: {
           ":guildId": guildId
-        }
+        },
+        ScanIndexForward: false // Ordenar por fecha descendente (más recientes primero)
       })
     );
 
+    // Convertimos todas las fechas de string a Date
     return (response.Items || []).map(character => ({
       ...character,
       createdAt: new Date(character.createdAt)

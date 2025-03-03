@@ -189,8 +189,12 @@ export default function registerCharacterCommands(
 
     if (interaction.commandName === "ver-personajes") {
       try {
-        const characters = await storage.getCharacters(interaction.guildId!);
-        const userCharacters = characters.filter(c => c.userId === interaction.user.id);
+        // Obtenemos todos los personajes del servidor
+        const allCharacters = await storage.getCharacters(interaction.guildId!);
+        // Filtramos solo los del usuario actual
+        const userCharacters = allCharacters.filter(c => c.userId === interaction.user.id);
+        
+        console.log(`Encontrados ${userCharacters.length} personajes para el usuario ${interaction.user.username}`);
 
         if (userCharacters.length === 0) {
           await interaction.reply({
