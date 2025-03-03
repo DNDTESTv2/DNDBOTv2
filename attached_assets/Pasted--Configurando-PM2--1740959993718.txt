@@ -1,0 +1,53 @@
+⚙️ Configurando PM2...
+
+                        -------------
+
+__/\\\\\\\\\\\\\____/\\\\____________/\\\\____/\\\\\\\\\_____
+ _\/\\\/////////\\\_\/\\\\\\________/\\\\\\__/\\\///////\\\___
+  _\/\\\_______\/\\\_\/\\\//\\\____/\\\//\\\_\///______\//\\\__
+   _\/\\\\\\\\\\\\\/__\/\\\\///\\\/\\\/_\/\\\___________/\\\/___
+    _\/\\\/////////____\/\\\__\///\\\/___\/\\\________/\\\//_____
+     _\/\\\_____________\/\\\____\///_____\/\\\_____/\\\//________
+      _\/\\\_____________\/\\\_____________\/\\\___/\\\/___________
+       _\/\\\_____________\/\\\_____________\/\\\__/\\\\\\\\\\\\\\\_
+        _\///______________\///______________\///__\///////////////__
+
+
+                          Runtime Edition
+
+        PM2 is a Production Process Manager for Node.js applications
+                     with a built-in Load Balancer.
+
+                Start and Daemonize any application:
+                $ pm2 start app.js
+
+                Load Balance 4 instances of api.js:
+                $ pm2 start api.js -i 4
+
+                Monitor in production:
+                $ pm2 monitor
+
+                Make pm2 auto-boot at server restart:
+                $ pm2 startup
+
+                To go further checkout:
+                http://pm2.io/
+
+
+                        -------------
+
+[PM2] Spawning PM2 daemon with pm2_home=/home/ubuntu/.pm2
+[PM2] PM2 Successfully daemonized
+[PM2][ERROR] File ecosystem.config.js malformated
+Error [ERR_REQUIRE_ESM]: require() of ES Module /home/ubuntu/DNDBOTv2/ecosystem.config.js from /usr/lib/node_modules/pm2/lib/Common.js not supported.
+ecosystem.config.js is treated as an ES module file as it is a .js file whose nearest parent package.json contains "type": "module" which declares all .js files in that package scope as ES modules.
+Instead either rename ecosystem.config.js to end in .cjs, change the requiring code to use dynamic import() which is available in all CommonJS modules, or change "type": "module" to "type": "commonjs" in /home/ubuntu/DNDBOTv2/package.json to treat all .js files as CommonJS (using .mjs for all ES modules instead).
+
+    at Common.parseConfig (/usr/lib/node_modules/pm2/lib/Common.js:331:12)
+    at API._startJson (/usr/lib/node_modules/pm2/lib/API.js:934:25)
+    at API.start (/usr/lib/node_modules/pm2/lib/API.js:329:12)
+    at /usr/lib/node_modules/pm2/lib/binaries/CLI.js:292:13
+    at /usr/lib/node_modules/pm2/node_modules/async/internal/withoutIndex.js:8:40 {
+  code: 'ERR_REQUIRE_ESM'
+}
+❌ Error al iniciar el bot con PM2

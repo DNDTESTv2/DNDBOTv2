@@ -42,14 +42,6 @@ if [ -d "DNDBOTv2" ]; then
     rm -rf DNDBOTv2
 fi
 
-# Configuración temporal de credenciales Git
-echo "🔐 Configurando credenciales temporales..."
-if [ -n "$GIT_USERNAME" ] && [ -n "$GIT_TOKEN" ]; then
-    git config --global credential.helper store
-    echo "https://$GIT_USERNAME:$GIT_TOKEN@github.com" > ~/.git-credentials
-    chmod 600 ~/.git-credentials
-fi
-
 # Clonar el repositorio
 echo "📦 Clonando repositorio..."
 git clone https://github.com/DNDTESTv2/DNDBOTv2.git || {
@@ -64,10 +56,16 @@ npm install || {
     echo "❌ Error al instalar dependencias"
     exit 1
 }
-sudo npm install -g pm2 || {
-    echo "❌ Error al instalar PM2"
+
+# Construir el proyecto
+echo "🛠️ Construyendo el proyecto..."
+npm run build || {
+    echo "❌ Error al construir el proyecto"
     exit 1
 }
+
+# Crear directorio para logs si no existe
+mkdir -p logs
 
 # Crear archivo .env
 echo "🔒 Configurando variables de entorno..."
@@ -78,27 +76,11 @@ AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
 AWS_REGION=${AWS_REGION}
 EOL
 
-# Construir el proyecto
-echo "🛠️ Construyendo el proyecto..."
-npm run build || {
-    echo "❌ Error al construir el proyecto"
-    exit 1
-}
-
-# Configurar PM2
-echo "⚙️ Configurando PM2..."
-pm2 start ecosystem.config.js || {
-    echo "❌ Error al iniciar el bot con PM2"
-    exit 1
-}
-pm2 save || {
-    echo "❌ Error al guardar la configuración de PM2"
-    exit 1
-}
-pm2 startup || {
-    echo "❌ Error al configurar el inicio automático de PM2"
-    exit 1
-}
+# Iniciar el bot
+echo "🤖 Iniciando el bot..."
+nohup node dist/index.js > logs/bot.log 2>&1 &
+echo $! > bot.pid
 
 echo "✅ ¡Despliegue completado!"
-echo "Para ver los logs del bot: pm2 logs discord-dnd-bot"
+echo "Para ver los logs del bot: tail -f logs/bot.log"
+echo "Para detener el bot: kill $(cat bot.pid)"
