@@ -291,8 +291,8 @@ export class DynamoDBStorage implements IStorage {
       languages: []
     };
 
-    // Crear un ID único combinando userId, nombre y timestamp
-    const characterId = `${character.userId}_${character.name.toLowerCase()}_${newCharacter.id}`;
+    // Generate a unique characterId
+    const characterId = `${character.userId}_${newCharacter.id}`;
 
     await docClient.send(
       new PutCommand({
@@ -310,55 +310,70 @@ export class DynamoDBStorage implements IStorage {
     return newCharacter;
   }
 
-  async getCharacter(guildId: string, userId: string, name?: string): Promise<Character | undefined> {
-    const response = await docClient.send(
-      new QueryCommand({
-        TableName: TableNames.CHARACTERS,
-        KeyConditionExpression: "guildId = :guildId",
-        FilterExpression: "userId = :userId" + (name ? " AND contains(#name, :name)" : ""),
-        ExpressionAttributeValues: {
-          ":guildId": guildId,
-          ":userId": userId,
-          ...(name ? { ":name": name } : {})
-        },
-        ExpressionAttributeNames: name ? { "#name": "name" } : undefined
-      })
-    );
-
-    // Si se busca por nombre, encontrar el que coincide exactamente o el primero
-    let character;
-    if (name && response.Items && response.Items.length > 0) {
-      character = response.Items.find(c => 
-        c.name.toLowerCase() === name.toLowerCase()
-      ) || response.Items[0];
-    } else {
-      // Si no hay nombre o no hay resultados, tomamos el primer personaje
-      character = response.Items?.[0];
-    }
-
-    return character ? {
-      ...character,
-      createdAt: new Date(character.createdAt)
-    } as Character : undefined;
-  }
-
   async getCharacters(guildId: string): Promise<Character[]> {
+    console.log(`Consultando personajes para el servidor ${guildId}`);
+
     const response = await docClient.send(
       new QueryCommand({
         TableName: TableNames.CHARACTERS,
         KeyConditionExpression: "guildId = :guildId",
         ExpressionAttributeValues: {
           ":guildId": guildId
-        },
-        ScanIndexForward: false // Ordenar por fecha descendente
+        }
       })
     );
 
-    // Convertir todas las fechas de string a Date
-    return (response.Items || []).map(character => ({
+    console.log(`Encontrados ${response.Items?.length || 0} personajes en total`);
+
+    // Convertir todas las fechas de string a Date y asegurarse de que todos los campos estén presentes
+    const characters = (response.Items || []).map(character => ({
+      ...character,
+      createdAt: new Date(character.createdAt),
+      imageUrl: character.imageUrl || null,
+      n20Url: character.n20Url || null,
+      rank: character.rank || 'Rango E',
+      alignment: character.alignment || null,
+      languages: character.languages || []
+    })) as Character[];
+
+    console.log(`Personajes procesados: ${characters.length}`);
+    return characters;
+  }
+
+  async getCharacter(guildId: string, userId: string, name?: string): Promise<Character | undefined> {
+    // First try to get all characters for this user in this guild
+    const response = await docClient.send(
+      new QueryCommand({
+        TableName: TableNames.CHARACTERS,
+        IndexName: "UserIndex",
+        KeyConditionExpression: "userId = :userId",
+        FilterExpression: "guildId = :guildId",
+        ExpressionAttributeValues: {
+          ":userId": userId,
+          ":guildId": guildId
+        }
+      })
+    );
+
+    if (!response.Items || response.Items.length === 0) {
+      return undefined;
+    }
+
+    let character;
+    if (name) {
+      // If name is provided, try to find an exact match
+      character = response.Items.find(
+        c => c.name.toLowerCase() === name.toLowerCase()
+      );
+    }
+
+    // If no name provided or no exact match found, return the first character
+    character = character || response.Items[0];
+
+    return {
       ...character,
       createdAt: new Date(character.createdAt)
-    })) as Character[];
+    } as Character;
   }
 
   async updateCharacter(id: number, character: Partial<InsertCharacter>): Promise<Character> {

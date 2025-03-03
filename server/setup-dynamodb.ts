@@ -1,4 +1,4 @@
-import { CreateTableCommand } from "@aws-sdk/client-dynamodb";
+import { CreateTableCommand, DeleteTableCommand, DescribeTableCommand } from "@aws-sdk/client-dynamodb";
 import { docClient, TableNames } from "./dynamodb";
 
 const tables = [
@@ -111,22 +111,22 @@ const tables = [
   {
     TableName: TableNames.CHARACTERS,
     KeySchema: [
-      { AttributeName: "guildId", KeyType: "HASH" as const },
-      { AttributeName: "userId", KeyType: "RANGE" as const }
+      { AttributeName: "guildId", KeyType: "HASH" },
+      { AttributeName: "characterId", KeyType: "RANGE" }
     ],
     AttributeDefinitions: [
-      { AttributeName: "guildId", AttributeType: "S" as const },
-      { AttributeName: "userId", AttributeType: "S" as const },
-      { AttributeName: "id", AttributeType: "N" as const }
+      { AttributeName: "guildId", AttributeType: "S" },
+      { AttributeName: "characterId", AttributeType: "S" },
+      { AttributeName: "userId", AttributeType: "S" }
     ],
     GlobalSecondaryIndexes: [
       {
-        IndexName: "IdIndex",
+        IndexName: "UserIndex",
         KeySchema: [
-          { AttributeName: "id", KeyType: "HASH" as const }
+          { AttributeName: "userId", KeyType: "HASH" }
         ],
         Projection: {
-          ProjectionType: "ALL" as const
+          ProjectionType: "ALL"
         },
         ProvisionedThroughput: {
           ReadCapacityUnits: 5,
@@ -141,8 +141,28 @@ const tables = [
   }
 ];
 
+async function deleteTableIfExists(tableName: string) {
+  try {
+    await docClient.send(new DescribeTableCommand({ TableName: tableName }));
+    console.log(`🗑️ Eliminando tabla existente ${tableName}...`);
+    await docClient.send(new DeleteTableCommand({ TableName: tableName }));
+    console.log(`✅ Tabla ${tableName} eliminada`);
+
+    // Esperar un momento para asegurarse de que la tabla se elimine completamente
+    await new Promise(resolve => setTimeout(resolve, 10000));
+  } catch (error: any) {
+    if (error.name !== 'ResourceNotFoundException') {
+      console.error(`❌ Error al eliminar tabla ${tableName}:`, error);
+      throw error;
+    }
+  }
+}
+
 async function setupTables() {
   console.log("🔄 Iniciando configuración de tablas DynamoDB...");
+
+  // Eliminar la tabla de personajes existente
+  await deleteTableIfExists(TableNames.CHARACTERS);
 
   for (const tableDefinition of tables) {
     try {
@@ -154,7 +174,7 @@ async function setupTables() {
         console.log(`ℹ️ La tabla ${tableDefinition.TableName} ya existe`);
       } else {
         console.error(`❌ Error creando tabla ${tableDefinition.TableName}:`, error);
-        throw error; // Re-throw para que el error sea capturado en index.ts
+        throw error;
       }
     }
   }
