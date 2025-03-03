@@ -78,14 +78,41 @@ app.use((req, res, next) => {
       serveStatic(app);
     }
 
-    const port = process.env.PORT || 3000;
-    server.listen({
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    }, () => {
-      console.log(`✅ Servidor iniciado en puerto ${port}`);
-    });
+    // Intentar puertos alternativos si el principal está en uso
+    const ports = [process.env.PORT || 3000, 3001, 3002];
+    let port;
+    let serverStarted = false;
+
+    for (port of ports) {
+      try {
+        await new Promise((resolve, reject) => {
+          server.listen({
+            port,
+            host: "0.0.0.0",
+            reusePort: true,
+          }, () => {
+            console.log(`✅ Servidor iniciado en puerto ${port}`);
+            serverStarted = true;
+            resolve(true);
+          }).on('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+              console.log(`⚠️ Puerto ${port} en uso, intentando siguiente...`);
+              resolve(false);
+            } else {
+              reject(err);
+            }
+          });
+        });
+
+        if (serverStarted) break;
+      } catch (error) {
+        console.error(`❌ Error al intentar puerto ${port}:`, error);
+      }
+    }
+
+    if (!serverStarted) {
+      throw new Error(`No se pudo iniciar el servidor en ningún puerto disponible: ${ports.join(', ')}`);
+    }
 
     // Manejo de señales de terminación
     const signals = ['SIGTERM', 'SIGINT'];
