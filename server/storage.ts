@@ -102,9 +102,9 @@ export class DynamoDBStorage implements IStorage {
         }
       })
     );
-    
+
     if (!response.Item) return undefined;
-    
+
     const wallet = response.Item as UserWallet;
     return {
       ...wallet,
@@ -297,8 +297,7 @@ export class DynamoDBStorage implements IStorage {
         Item: {
           ...newCharacter,
           createdAt: newCharacter.createdAt.toISOString()
-        },
-        ConditionExpression: "attribute_not_exists(guildId) AND attribute_not_exists(userId)"
+        }
       })
     );
 
@@ -331,8 +330,7 @@ export class DynamoDBStorage implements IStorage {
         KeyConditionExpression: "guildId = :guildId",
         ExpressionAttributeValues: {
           ":guildId": guildId
-        },
-        ScanIndexForward: false // Get most recent characters first
+        }
       })
     );
 
