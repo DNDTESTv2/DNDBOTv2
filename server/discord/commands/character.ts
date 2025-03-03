@@ -127,6 +127,67 @@ export default function registerCharacterCommands(
   client.on("interactionCreate", async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
+    if (interaction.commandName === "ver-personajes") {
+      try {
+        console.log(`Obteniendo personajes para el usuario ${interaction.user.id} en el servidor ${interaction.guildId}`);
+
+        // Obtener todos los personajes del servidor
+        const allCharacters = await storage.getCharacters(interaction.guildId!);
+        console.log(`Total de personajes encontrados en el servidor: ${allCharacters.length}`);
+
+        // Filtrar solo los personajes del usuario actual
+        const userCharacters = allCharacters.filter(c => c.userId === interaction.user.id);
+        console.log(`Personajes filtrados para el usuario: ${userCharacters.length}`);
+
+        if (userCharacters.length === 0) {
+          await interaction.reply({
+            content: `No tienes personajes creados aún.`,
+            flags: MessageFlags.Ephemeral
+          });
+          return;
+        }
+
+        // Crear un embed por cada personaje
+        const embeds = userCharacters.map(char => {
+          const embed = new EmbedBuilder()
+            .setTitle(char.name)
+            .addFields(
+              { name: 'Clase', value: char.class, inline: true },
+              { name: 'Raza', value: char.race, inline: true },
+              { name: 'Nivel', value: char.level.toString(), inline: true },
+              { name: 'Rango', value: char.rank, inline: true },
+              { name: 'Creado', value: new Date(char.createdAt).toLocaleDateString(), inline: true }
+            )
+            .setTimestamp()
+            .setColor('#0099ff');
+
+          if (char.imageUrl) {
+            embed.setImage(char.imageUrl);
+          }
+
+          if (char.n20Url) {
+            embed.addFields({ name: 'N20', value: `[Ver en N20](${char.n20Url})`, inline: false });
+          }
+
+          return embed;
+        });
+
+        // Enviar respuesta con todos los embeds
+        await interaction.reply({
+          content: `**Tus personajes** (${userCharacters.length}):`,
+          embeds: embeds,
+          flags: MessageFlags.Ephemeral
+        });
+
+      } catch (error) {
+        console.error("Error al obtener personajes:", error);
+        await interaction.reply({
+          content: "Hubo un error al obtener los personajes",
+          flags: MessageFlags.Ephemeral
+        });
+      }
+    }
+
     if (interaction.commandName === "crear-personaje") {
       try {
         const name = interaction.options.getString("nombre", true);
@@ -182,59 +243,6 @@ export default function registerCharacterCommands(
         console.error("Error al crear personaje:", error);
         await interaction.reply({
           content: "Hubo un error al crear el personaje. Asegúrate de proporcionar URLs válidas para la imagen y N20.",
-          flags: MessageFlags.Ephemeral
-        });
-      }
-    }
-
-    if (interaction.commandName === "ver-personajes") {
-      try {
-        // Obtenemos todos los personajes del servidor
-        const allCharacters = await storage.getCharacters(interaction.guildId!);
-        // Filtramos solo los del usuario actual
-        const userCharacters = allCharacters.filter(c => c.userId === interaction.user.id);
-        
-        console.log(`Encontrados ${userCharacters.length} personajes para el usuario ${interaction.user.username}`);
-
-        if (userCharacters.length === 0) {
-          await interaction.reply({
-            content: `${interaction.user.username} no tiene personajes creados aún.`
-          });
-          return;
-        }
-
-        const embeds = userCharacters.map(char => {
-          const embed = new EmbedBuilder()
-            .setTitle(char.name)
-            .addFields(
-              { name: 'Clase', value: char.class, inline: true },
-              { name: 'Raza', value: char.race, inline: true },
-              { name: 'Nivel', value: char.level.toString(), inline: true },
-              { name: 'Rango', value: char.rank, inline: true },
-              { name: 'Creado', value: char.createdAt.toLocaleDateString(), inline: true }
-            )
-            .setTimestamp()
-            .setColor('#0099ff');
-
-          if (char.imageUrl) {
-            embed.setImage(char.imageUrl);
-          }
-
-          if (char.n20Url) {
-            embed.addFields({ name: 'N20', value: `[Ver en N20](${char.n20Url})`, inline: false });
-          }
-
-          return embed;
-        });
-
-        await interaction.reply({
-          content: `**Personajes de ${interaction.user.username}** (${userCharacters.length}):`,
-          embeds: embeds
-        });
-      } catch (error) {
-        console.error("Error al obtener personajes:", error);
-        await interaction.reply({
-          content: "Hubo un error al obtener los personajes",
           flags: MessageFlags.Ephemeral
         });
       }
