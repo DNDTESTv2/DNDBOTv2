@@ -59,7 +59,7 @@ app.use((req, res, next) => {
 
     // Configurar DynamoDB primero
     console.log("⏳ Configurando DynamoDB...");
-    await setupTables();
+    // await setupTables();
     console.log("✅ DynamoDB configurado exitosamente");
 
     const server = await registerRoutes(app);
