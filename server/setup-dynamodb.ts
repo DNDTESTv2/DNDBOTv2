@@ -142,6 +142,5 @@ const tables = [
 ];
 
   console.log("✅ Configuración de DynamoDB completada");
-}
 
 export default setupTables;
