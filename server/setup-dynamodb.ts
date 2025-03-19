@@ -141,44 +141,6 @@ const tables = [
   }
 ];
 
-async function deleteTableIfExists(tableName: string) {
-  try {
-    await docClient.send(new DescribeTableCommand({ TableName: tableName }));
-    console.log(`🗑️ Eliminando tabla existente ${tableName}...`);
-    await docClient.send(new DeleteTableCommand({ TableName: tableName }));
-    console.log(`✅ Tabla ${tableName} eliminada`);
-
-    // Esperar un momento para asegurarse de que la tabla se elimine completamente
-    await new Promise(resolve => setTimeout(resolve, 10000));
-  } catch (error: any) {
-    if (error.name !== 'ResourceNotFoundException') {
-      console.error(`❌ Error al eliminar tabla ${tableName}:`, error);
-      throw error;
-    }
-  }
-}
-
-async function setupTables() {
-  console.log("🔄 Iniciando configuración de tablas DynamoDB...");
-
-  // Eliminar la tabla de personajes existente
-  await deleteTableIfExists(TableNames.CHARACTERS);
-
-  for (const tableDefinition of tables) {
-    try {
-      console.log(`⏳ Creando tabla ${tableDefinition.TableName}...`);
-      await docClient.send(new CreateTableCommand(tableDefinition));
-      console.log(`✅ Tabla ${tableDefinition.TableName} creada exitosamente`);
-    } catch (error: any) {
-      if (error.name === 'ResourceInUseException') {
-        console.log(`ℹ️ La tabla ${tableDefinition.TableName} ya existe`);
-      } else {
-        console.error(`❌ Error creando tabla ${tableDefinition.TableName}:`, error);
-        throw error;
-      }
-    }
-  }
-
   console.log("✅ Configuración de DynamoDB completada");
 }
 
