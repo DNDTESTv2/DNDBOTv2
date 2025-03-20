@@ -549,5 +549,24 @@ async deleteCharacter(characterId: string, name: string): Promise<boolean> {
     return response.Items?.[0] as UserWallet | undefined;
   }
 }
+// Método auxiliar para obtener character por ID
+  private async getCharacterById(id: number): Promise<Character | undefined> {
+    const response = await docClient.send(
+      new QueryCommand({
+        TableName: TableNames.CHARACTERS,
+        IndexName: "IdIndex",
+        KeyConditionExpression: "id = :id",
+        ExpressionAttributeValues: {
+          ":id": id
+        }
+      })
+    );
+
+    const character = response.Items?.[0];
+    return character ? {
+      ...character,
+      createdAt: new Date(character.createdAt)
+    } as Character : undefined;
+  }
 
 export const storage = new DynamoDBStorage();
