@@ -23,7 +23,18 @@ echo "📥 Descargando cambios del repositorio..."
 git fetch origin main
 git reset --hard origin/main
 
-# Limpiar node_modules y reinstalar dependencias
+# Verificar si las dependencias ya están instaladas
+if [ ! -d "node_modules" ]; then
+    echo "📦 Instalando dependencias..."
+    npm install || {
+        echo "❌ Error al instalar dependencias"
+        exit 1
+    }
+else
+    echo "✅ Dependencias ya instaladas"
+fi
+
+# Limpiar node_modules si es necesario
 echo "🧹 Limpiando instalación anterior..."
 rm -rf node_modules
 rm -f package-lock.json
@@ -47,3 +58,4 @@ echo $! > bot.pid
 echo "✅ Actualización completada!"
 echo "Para ver los logs del bot: tail -f logs/bot.log"
 echo "Para detener el bot: kill $(cat bot.pid)"
+echo "Marco😎"
