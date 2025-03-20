@@ -412,7 +412,7 @@ export class DynamoDBStorage implements IStorage {
         // Buscar el personaje por nombre y guildId
         const response = await docClient.send(
             new QueryCommand({
-                TableName: TableNames.CHARACTERS,
+                TableName: TableNames.rpg_bot_characters,
                 KeyConditionExpression: "guildId = :guildId AND #nm = :name",
                 ExpressionAttributeValues: {
                     ":guildId": guildId,
@@ -434,7 +434,7 @@ export class DynamoDBStorage implements IStorage {
         // Ahora eliminamos el personaje con su ID
         await docClient.send(
             new DeleteCommand({
-                TableName: TableNames.CHARACTERS,
+                TableName: TableNames.rpg_bot_characters,
                 Key: {
                     guildId: guildId,
                     id: characterId // Eliminamos por ID correcto
