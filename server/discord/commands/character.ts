@@ -286,10 +286,11 @@ export default function registerCharacterCommands(
         }
 
         const embed = new EmbedBuilder()
-          .setTitle("Personaje eliminado")
-          .setDescription(`**${name}** ha sido eliminado de tu colección.`)
-          .setColor('#ff0000')
-          .setTimestamp();: true });
+  .setTitle("Personaje eliminado")
+  .setDescription(`**${name}** ha sido eliminado de tu colección.`)
+  .setColor('#ff0000')
+  .setTimestamp();
+
 
         // Get all characters from the server
         const characters = await storage.getCharacters(guildId);
