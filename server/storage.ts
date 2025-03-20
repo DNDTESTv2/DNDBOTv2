@@ -409,45 +409,53 @@ export class DynamoDBStorage implements IStorage {
   
 async deleteCharacter(guildId: string, name: string): Promise<boolean> {
     try {
+        console.log(`Buscando personaje: ${name} en guild: ${guildId}`);
+
+        // Buscar personaje con ScanCommand porque name no es parte de la clave primaria
         const response = await docClient.send(
-            new QueryCommand({
-                TableName: rpg_bot_characters,
-                KeyConditionExpression: "guildId = :guildId",
-                FilterExpression: "#nm = :name",
+            new ScanCommand({
+                TableName: TableNames.CHARACTERS,
+                FilterExpression: "guildId = :guildId AND #nm = :name",
                 ExpressionAttributeValues: {
                     ":guildId": guildId,
                     ":name": name
                 },
                 ExpressionAttributeNames: {
-                    "#nm": "name"
+                    "#nm": "name" // Usamos un alias para "name" si está en la tabla
                 }
             })
         );
 
+        console.log("Personajes encontrados:", response.Items);
+
         if (!response.Items || response.Items.length === 0) {
-            console.log(Character "${name}" not found in guild "${guildId}".);
+            console.error(`Personaje "${name}" no encontrado en la guild "${guildId}".`);
             return false;
         }
 
-        const character = response.Items[0];
+        const characterId = response.Items[0].characterId; // Obtener el characterId
 
+        console.log(`Eliminando personaje con ID: ${characterId}`);
+
+        // Ahora eliminamos el personaje usando guildId y characterId
         await docClient.send(
             new DeleteCommand({
-                TableName: rpg_bot_characters,
+                TableName: TableNames.CHARACTERS,
                 Key: {
-                    guildId: character.guildId,
-                    id: character.id
+                    guildId: guildId,
+                    characterId: characterId // Eliminamos con las claves correctas
                 }
             })
         );
 
-        console.log(Character "${name}" deleted successfully.);
+        console.log(`Personaje "${name}" eliminado exitosamente.`);
         return true;
     } catch (error) {
-        console.error("Error deleting character:", error);
+        console.error("Error eliminando personaje:", error);
         return false;
     }
 }
+
 
 
 
