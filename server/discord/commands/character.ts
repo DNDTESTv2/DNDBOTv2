@@ -40,11 +40,38 @@ export default function registerCharacterCommands(
     .addStringOption(option =>
       option.setName("raza")
         .setDescription("Raza del personaje")
-        .setRequired(true))
+        .setRequired(true)
+        .addChoices(
+          { name: 'Acompañante', value: 'acompanante' },
+          { name: 'Dhamphiro', value: 'dhamphiro' },
+          { name: 'Draconido', value: 'draconido' },
+          { name: 'Draconido Cromatico', value: 'draconido_cromatico' },
+          { name: 'Draconido Gema', value: 'draconido_gema' },
+          { name: 'Draconido Metalico', value: 'draconido_metalico' },
+          { name: 'Elfo', value: 'elfo' },
+          { name: 'Enano', value: 'enano' },
+          { name: 'Gnomo', value: 'gnomo' },
+          { name: 'Humano', value: 'humano' },
+          { name: 'Linaje Personalizado', value: 'linaje_personalizado' },
+          { name: 'Mediano', value: 'mediano' },
+          { name: 'Renacido', value: 'renacido' },
+          { name: 'Sangre Malefica', value: 'sangre_malefica' },
+          { name: 'Semielfo', value: 'semielfo' },
+          { name: 'Semiorco', value: 'semiorco' },
+          { name: 'Tiefling', value: 'tiefling' },
+          { name: 'Tiefling Variante', value: 'tiefling_variante' }
+        ))
     .addStringOption(option =>
       option.setName("rango")
         .setDescription("Rango del personaje")
-        .setRequired(true))
+        .setRequired(true)
+        .addChoices(
+          { name: 'Rango E', value: 'Rango E' },
+          { name: 'Rango D', value: 'Rango D' },
+          { name: 'Rango C', value: 'Rango C' },
+          { name: 'Rango B', value: 'Rango B' },
+          { name: 'Rango A', value: 'Rango A' }
+        ))
     .addStringOption(option =>
       option.setName("imagen")
         .setDescription("URL de la imagen del personaje")
@@ -116,4 +143,3 @@ export default function registerCharacterCommands(
     }
   });
 }
-
