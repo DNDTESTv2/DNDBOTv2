@@ -550,23 +550,34 @@ async deleteCharacter(characterId: string, name: string): Promise<boolean> {
   }
 }
 // Método auxiliar para obtener character por ID
-  private async getCharacterById(id: number): Promise<Character | undefined> {
-    const response = await docClient.send(
-      new QueryCommand({
-        TableName: TableNames.CHARACTERS,
-        IndexName: "IdIndex",
-        KeyConditionExpression: "id = :id",
-        ExpressionAttributeValues: {
-          ":id": id
-        }
-      })
-    );
+async getCharacterById(characterId: string): Promise<any | null> {
+    try {
+        console.log(`Buscando personaje con ID: ${characterId}`);
 
-    const character = response.Items?.[0];
-    return character ? {
-      ...character,
-      createdAt: new Date(character.createdAt)
-    } as Character : undefined;
-  }
+        // Buscar el personaje con ScanCommand
+        const response = await docClient.send(
+            new ScanCommand({
+                TableName: TableNames.CHARACTERS,
+                FilterExpression: "characterId = :characterId",
+                ExpressionAttributeValues: {
+                    ":characterId": characterId
+                }
+            })
+        );
+
+        console.log("Personajes encontrados:", response.Items);
+
+        if (!response.Items || response.Items.length === 0) {
+            console.error(`Personaje con ID "${characterId}" no encontrado.`);
+            return null;
+        }
+
+        return response.Items[0]; // Retornar el personaje encontrado
+    } catch (error) {
+        console.error("Error buscando personaje:", error);
+        return null;
+    }
+}
+
 
 export const storage = new DynamoDBStorage();
