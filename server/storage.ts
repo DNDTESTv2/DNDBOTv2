@@ -407,52 +407,46 @@ export class DynamoDBStorage implements IStorage {
     return updatedCharacter;
   }
   
-async deleteCharacter(guildId: string, name: string): Promise<boolean> {
+async deleteCharacter(characterId: string, name: string): Promise<boolean> {
     try {
-        console.log(`Buscando personaje con nombre: "${name}" en la guild: "${guildId}"`);
-
-        // Buscar el personaje con ScanCommand
+        // Realizamos la consulta para buscar el personaje por characterId
         const response = await docClient.send(
-            new ScanCommand({
-                TableName: TableNames.CHARACTERS,
-                FilterExpression: "guildId = :guildId AND #nm = :name",
-                ExpressionAttributeValues: {
-                    ":guildId": guildId,
-                    ":name": name
-                },
+            new QueryCommand({
+                TableName: TableName.CHARACTERS,
+                IndexName: "characterId", // Usamos el GSI basado en characterId
+                KeyConditionExpression: "#cid = :characterId", // Buscamos por characterId
                 ExpressionAttributeNames: {
-                    "#nm": "name" // Alias para evitar palabras reservadas
+                    "#cid": "characterId" // Mapeamos el atributo characterId
+                },
+                ExpressionAttributeValues: {
+                    ":characterId": characterId // El valor que queremos buscar
                 }
             })
         );
 
-        console.log("Personajes encontrados:", response.Items);
-
         if (!response.Items || response.Items.length === 0) {
-            console.error(`Personaje "${name}" no encontrado en la guild "${guildId}".`);
+            console.log(Character with characterId "${characterId}" not found.);
             return false;
         }
 
-        // Obtener el characterId del primer resultado encontrado
-        const characterId = response.Items[0].characterId; 
+        // Suponemos que el GSI devuelve solo el personaje que estamos buscando
+        const character = response.Items[0];
 
-        console.log(`Eliminando personaje con ID: ${characterId}`);
-
-        // Eliminar el personaje usando guildId y characterId (claves primarias)
+        // Ahora eliminamos el personaje por su id
         await docClient.send(
             new DeleteCommand({
-                TableName: TableNames.CHARACTERS,
+                TableName: TableName.CHARACTERS,
                 Key: {
-                    guildId: guildId,
-                    characterId: characterId
+                    guildId: character.guildId, // Usamos guildId de la consulta
+                    id: character.id // Usamos el id del personaje para eliminarlo
                 }
             })
         );
 
-        console.log(`Personaje "${name}" eliminado exitosamente.`);
+        console.log(Character "${name}" deleted successfully.);
         return true;
     } catch (error) {
-        console.error("Error eliminando personaje:", error);
+        console.error("Error deleting character:", error);
         return false;
     }
 }
