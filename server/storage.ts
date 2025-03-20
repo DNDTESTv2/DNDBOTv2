@@ -407,7 +407,7 @@ export class DynamoDBStorage implements IStorage {
     return updatedCharacter;
   }
   
-  async deleteCharacter(name: string, guildId: string): Promise<boolean> {
+  async deleteCharacter(guildId: string, name: string): Promise<boolean> {
     try {
       await docClient.send(
         new DeleteCommand({
@@ -420,10 +420,11 @@ export class DynamoDBStorage implements IStorage {
       );
       return true;
     } catch (error) {
-      console.error("Error deleting currency:", error);
+      console.error("Error deleting character:", error);
       return false;
     }
   }
+
 /*
   async deleteCharacter(id: number, guildId: string): Promise<boolean> {
     try {
