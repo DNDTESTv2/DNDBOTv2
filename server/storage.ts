@@ -406,7 +406,25 @@ export class DynamoDBStorage implements IStorage {
 
     return updatedCharacter;
   }
-
+  
+  async deleteCharacter(name: string, guildId: string): Promise<boolean> {
+    try {
+      await docClient.send(
+        new DeleteCommand({
+          TableName: TableNames.CHARACTERS,
+          Key: {
+            guildId: guildId,
+            name: name
+          }
+        })
+      );
+      return true;
+    } catch (error) {
+      console.error("Error deleting currency:", error);
+      return false;
+    }
+  }
+/*
   async deleteCharacter(id: number, guildId: string): Promise<boolean> {
     try {
       logger.info('Iniciando eliminación:', {
@@ -484,7 +502,7 @@ export class DynamoDBStorage implements IStorage {
       return false;
     }
   }
-
+*/
   private async getUserWalletById(id: number): Promise<UserWallet | undefined> {
     const response = await docClient.send(
       new QueryCommand({
