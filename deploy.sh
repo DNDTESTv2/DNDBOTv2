@@ -37,12 +37,16 @@ rm -rf DNDBOTv2 && git clone https://github.com/DNDTESTv2/DNDBOTv2.git || {
 }
 cd DNDBOTv2 || exit 1
 
-# Instalar dependencias
-echo "📚 Instalando dependencias..."
-npm install || {
-    echo "❌ Error al instalar dependencias"
-    exit 1
-}
+# Verificar si las dependencias ya están instaladas
+if [ ! -d "node_modules" ]; then
+    echo "📚 Instalando dependencias..."
+    npm install || {
+        echo "❌ Error al instalar dependencias"
+        exit 1
+    }
+else
+    echo "✅ Dependencias ya instaladas"
+fi
 
 # Construir el proyecto
 echo "🛠️ Construyendo el proyecto..."
@@ -79,3 +83,4 @@ fi
 echo "✅ ¡Despliegue completado!"
 echo "Para ver los logs del bot: tail -f logs/bot.log"
 echo "Para detener el bot: kill \$(cat bot.pid)"
+echo "Marco😎"
