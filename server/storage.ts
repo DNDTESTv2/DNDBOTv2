@@ -409,9 +409,9 @@ export class DynamoDBStorage implements IStorage {
   
 async deleteCharacter(guildId: string, name: string): Promise<boolean> {
     try {
-        console.log(`Buscando personaje: ${name} en guild: ${guildId}`);
+        console.log(`Buscando personaje con nombre: "${name}" en la guild: "${guildId}"`);
 
-        // Buscar personaje con ScanCommand porque name no es parte de la clave primaria
+        // Buscar el personaje con ScanCommand
         const response = await docClient.send(
             new ScanCommand({
                 TableName: TableNames.CHARACTERS,
@@ -421,7 +421,7 @@ async deleteCharacter(guildId: string, name: string): Promise<boolean> {
                     ":name": name
                 },
                 ExpressionAttributeNames: {
-                    "#nm": "name" // Usamos un alias para "name" si está en la tabla
+                    "#nm": "name" // Alias para evitar palabras reservadas
                 }
             })
         );
@@ -433,17 +433,18 @@ async deleteCharacter(guildId: string, name: string): Promise<boolean> {
             return false;
         }
 
-        const characterId = response.Items[0].characterId; // Obtener el characterId
+        // Obtener el characterId del primer resultado encontrado
+        const characterId = response.Items[0].characterId; 
 
         console.log(`Eliminando personaje con ID: ${characterId}`);
 
-        // Ahora eliminamos el personaje usando guildId y characterId
+        // Eliminar el personaje usando guildId y characterId (claves primarias)
         await docClient.send(
             new DeleteCommand({
                 TableName: TableNames.CHARACTERS,
                 Key: {
                     guildId: guildId,
-                    characterId: characterId // Eliminamos con las claves correctas
+                    characterId: characterId
                 }
             })
         );
@@ -455,6 +456,7 @@ async deleteCharacter(guildId: string, name: string): Promise<boolean> {
         return false;
     }
 }
+
 
 
 
