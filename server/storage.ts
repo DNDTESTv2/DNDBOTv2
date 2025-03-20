@@ -425,7 +425,7 @@ async deleteCharacter(characterId: string, name: string): Promise<boolean> {
         );
 
         if (!response.Items || response.Items.length === 0) {
-            console.log(Character with characterId "${characterId}" not found.);
+            console.log(`Character with characterId "${characterId}" not found.`);
             return false;
         }
 
