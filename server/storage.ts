@@ -1,5 +1,5 @@
 import { docClient, TableNames } from "./dynamodb";
-import { PutCommand, GetCommand, QueryCommand, DeleteCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, GetCommand, QueryCommand, DeleteCommand, UpdateCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { logger } from "./utils/logger";
 
 export class DynamoDBStorage implements IStorage {
@@ -8,27 +8,17 @@ export class DynamoDBStorage implements IStorage {
       new QueryCommand({
         TableName: TableNames.CURRENCIES,
         KeyConditionExpression: "guildId = :guildId",
-        ExpressionAttributeValues: {
-          ":guildId": guildId
-        }
+        ExpressionAttributeValues: { ":guildId": guildId }
       })
     );
     return response.Items as Currency[] || [];
   }
 
   async createCurrency(currency: InsertCurrency): Promise<Currency> {
-    const newCurrency = {
-      id: Date.now(), // Usar timestamp como ID
-      ...currency
-    };
-
+    const newCurrency = { id: Date.now(), ...currency };
     await docClient.send(
-      new PutCommand({
-        TableName: TableNames.CURRENCIES,
-        Item: newCurrency
-      })
+      new PutCommand({ TableName: TableNames.CURRENCIES, Item: newCurrency })
     );
-
     return newCurrency;
   }
 
@@ -37,10 +27,7 @@ export class DynamoDBStorage implements IStorage {
       await docClient.send(
         new DeleteCommand({
           TableName: TableNames.CURRENCIES,
-          Key: {
-            guildId: guildId,
-            name: name
-          }
+          Key: { guildId, name }
         })
       );
       return true;
@@ -52,532 +39,53 @@ export class DynamoDBStorage implements IStorage {
 
   async getUserWallet(guildId: string, userId: string): Promise<UserWallet | undefined> {
     const response = await docClient.send(
-      new GetCommand({
-        TableName: TableNames.USER_WALLETS,
-        Key: {
-          guildId: guildId,
-          userId: userId
-        }
-      })
+      new GetCommand({ TableName: TableNames.USER_WALLETS, Key: { guildId, userId } })
     );
-
     if (!response.Item) return undefined;
-
-    const wallet = response.Item as UserWallet;
-    return {
-      ...wallet,
-      lastWorked: wallet.lastWorked ? new Date(wallet.lastWorked) : null,
-      lastStolen: wallet.lastStolen ? new Date(wallet.lastStolen) : null
-    };
+    return { ...response.Item, lastWorked: response.Item.lastWorked ? new Date(response.Item.lastWorked) : null, lastStolen: response.Item.lastStolen ? new Date(response.Item.lastStolen) : null };
   }
 
   async createUserWallet(wallet: InsertUserWallet): Promise<UserWallet> {
-    const newWallet: UserWallet = {
-      id: Date.now(),
-      ...wallet,
-      wallet: {},
-      lastWorked: null,
-      lastStolen: null
-    };
-
+    const newWallet: UserWallet = { id: Date.now(), ...wallet, wallet: {}, lastWorked: null, lastStolen: null };
     await docClient.send(
-      new PutCommand({
-        TableName: TableNames.USER_WALLETS,
-        Item: newWallet
-      })
+      new PutCommand({ TableName: TableNames.USER_WALLETS, Item: newWallet })
     );
-
     return newWallet;
   }
 
-  async updateUserWallet(
-    id: number,
-    wallet: Record<string, number>,
-    lastWorked?: Date,
-    lastStolen?: Date
-  ): Promise<UserWallet> {
-    // Primero obtenemos el registro existente para conseguir guildId y userId
-    const existingWallet = await this.getUserWalletById(id);
-    if (!existingWallet) {
-      throw new Error(`Wallet with id ${id} not found`);
-    }
-
-    const updatedWallet = {
-      ...existingWallet,
-      wallet,
-      lastWorked: lastWorked ? lastWorked.toISOString() : existingWallet.lastWorked,
-      lastStolen: lastStolen ? lastStolen.toISOString() : existingWallet.lastStolen
-    };
-
-    await docClient.send(
-      new UpdateCommand({
-        TableName: TableNames.USER_WALLETS,
-        Key: {
-          guildId: existingWallet.guildId,
-          userId: existingWallet.userId
-        },
-        UpdateExpression: "set wallet = :w, lastWorked = :lw, lastStolen = :ls",
-        ExpressionAttributeValues: {
-          ":w": wallet,
-          ":lw": updatedWallet.lastWorked,
-          ":ls": updatedWallet.lastStolen
-        }
-      })
-    );
-
-    return updatedWallet;
-  }
-
-  async getGuildSettings(guildId: string): Promise<GuildSettings | undefined> {
-    const response = await docClient.send(
-      new GetCommand({
-        TableName: TableNames.GUILD_SETTINGS,
-        Key: {
-          guildId: guildId
-        }
-      })
-    );
-    return response.Item as GuildSettings | undefined;
-  }
-
-  async setTransactionLogChannel(guildId: string, channelId: string): Promise<GuildSettings> {
-    const settings: GuildSettings = {
-      id: Date.now(),
-      guildId,
-      transactionLogChannel: channelId
-    };
-
-    await docClient.send(
-      new PutCommand({
-        TableName: TableNames.GUILD_SETTINGS,
-        Item: settings
-      })
-    );
-
-    return settings;
-  }
-
-  async createTransaction(transaction: InsertTransaction): Promise<Transaction> {
-    const newTransaction: Transaction = {
-      id: Date.now(),
-      ...transaction,
-      timestamp: new Date()
-    };
-
-    await docClient.send(
-      new PutCommand({
-        TableName: TableNames.TRANSACTIONS,
-        Item: {
-          ...newTransaction,
-          timestamp: newTransaction.timestamp.toISOString()
-        }
-      })
-    );
-
-    return newTransaction;
-  }
-
-  async getTransactions(guildId: string): Promise<Transaction[]> {
-    const response = await docClient.send(
-      new QueryCommand({
-        TableName: TableNames.TRANSACTIONS,
-        KeyConditionExpression: "guildId = :guildId",
-        ExpressionAttributeValues: {
-          ":guildId": guildId
-        }
-      })
-    );
-
-    return (response.Items || []).map(item => ({
-      ...item,
-      timestamp: new Date(item.timestamp)
-    })) as Transaction[];
-  }
-
-  async transferCurrency(
-    guildId: string,
-    fromUserId: string,
-    toUserId: string,
-    currencyName: string,
-    amount: number
-  ): Promise<Transaction> {
-    const fromWallet = await this.getUserWallet(guildId, fromUserId);
-    const toWallet = await this.getUserWallet(guildId, toUserId);
-
-    if (!fromWallet) {
-      throw new Error("Source wallet not found");
-    }
-
-    if (!toWallet) {
-      throw new Error("Destination wallet not found");
-    }
-
-    const currentBalance = fromWallet.wallet[currencyName] || 0;
-    if (currentBalance < amount) {
-      throw new Error("Insufficient funds");
-    }
-
-    // Update wallets
-    const fromUpdated = { ...fromWallet.wallet };
-    const toUpdated = { ...toWallet.wallet };
-
-    fromUpdated[currencyName] = (fromUpdated[currencyName] || 0) - amount;
-    toUpdated[currencyName] = (toUpdated[currencyName] || 0) + amount;
-
-    await this.updateUserWallet(fromWallet.id, fromUpdated);
-    await this.updateUserWallet(toWallet.id, toUpdated);
-
-    // Create transaction record
-    return this.createTransaction({
-      guildId,
-      fromUserId,
-      toUserId,
-      currencyName,
-      amount
-    });
-  }
-
-  async createCharacter(character: InsertCharacter): Promise<Character> {
-    const newCharacter: Character = {
-      id: Date.now(),
-      ...character,
-      createdAt: new Date(),
-      imageUrl: character.imageUrl ?? null,
-      n20Url: character.n20Url ?? null,
-      rank: character.rank || 'Rango E',
-      alignment: null,
-      languages: []
-    };
-
-    // Generar el characterId
-    const characterId = `${character.userId}_${newCharacter.id}`;
-
-    logger.info('Creando personaje:', {
-      operation: 'CREATE',
-      id: newCharacter.id,
-      characterId,
-      guildId: character.guildId,
-      userId: character.userId,
-      name: character.name,
-      fullItem: JSON.stringify({
-        ...newCharacter,
-        characterId,
-        createdAt: newCharacter.createdAt.toISOString()
-      }, null, 2)
-    });
-
-    await docClient.send(
-      new PutCommand({
-        TableName: TableNames.CHARACTERS,
-        Item: {
-          ...newCharacter,
-          characterId,
-          createdAt: newCharacter.createdAt.toISOString()
-        }
-      })
-    );
-
-    // Verificar que se guardó correctamente
-    const savedCharacter = await this.getCharacter(character.guildId, character.userId, character.name);
-    logger.info('Resultado de creación:', {
-      operation: 'CREATE_VERIFY',
-      id: newCharacter.id,
-      saved: !!savedCharacter,
-      savedData: savedCharacter ? JSON.stringify(savedCharacter, null, 2) : null
-    });
-
-    return newCharacter;
-  }
-
-  async getCharacters(guildId: string): Promise<Character[]> {
-    logger.info(`Consultando personajes para el servidor ${guildId}`);
-
+  async getCharacterById(characterId: string): Promise<Character | null> {
     try {
       const response = await docClient.send(
-        new QueryCommand({
+        new ScanCommand({
           TableName: TableNames.CHARACTERS,
-          KeyConditionExpression: "guildId = :guildId",
-          ExpressionAttributeValues: {
-            ":guildId": guildId
-          }
+          FilterExpression: "characterId = :characterId",
+          ExpressionAttributeValues: { ":characterId": characterId }
         })
       );
-
-      logger.info(`Encontrados ${response.Items?.length || 0} personajes`);
-
-      // Convertir todas las fechas de string a Date y asegurarse de que todos los campos estén presentes
-      const characters = (response.Items || []).map(character => ({
-        ...character,
-        createdAt: new Date(character.createdAt),
-        imageUrl: character.imageUrl || null,
-        n20Url: character.n20Url || null,
-        rank: character.rank || 'Rango E',
-        alignment: character.alignment || null,
-        languages: character.languages || []
-      })) as Character[];
-
-      logger.info('Personajes procesados:', {
-        count: characters.length,
-        firstCharacter: characters.length > 0 ? JSON.stringify(characters[0], null, 2) : null
-      });
-
-      return characters;
+      return response.Items?.[0] || null;
     } catch (error) {
-      logger.error('Error al obtener personajes:', {
-        guildId,
-        error: JSON.stringify(error, null, 2)
-      });
-      return [];
+      console.error("Error buscando personaje:", error);
+      return null;
     }
   }
 
-  async getCharacter(guildId: string, userId: string, name?: string): Promise<Character | undefined> {
-    // First try to get all characters for this user in this guild
-    const response = await docClient.send(
-      new QueryCommand({
-        TableName: TableNames.CHARACTERS,
-        //IndexName: "UserIndex", //Removed IndexName
-        KeyConditionExpression: "userId = :userId AND guildId = :guildId", //Modified KeyConditionExpression
-        ExpressionAttributeValues: {
-          ":userId": userId,
-          ":guildId": guildId
-        }
-      })
-    );
-
-    if (!response.Items || response.Items.length === 0) {
-      return undefined;
-    }
-
-    let character;
-    if (name) {
-      // If name is provided, try to find an exact match
-      character = response.Items.find(
-        c => c.name.toLowerCase() === name.toLowerCase()
-      );
-    }
-
-    // If no name provided or no exact match found, return the first character
-    character = character || response.Items[0];
-
-    return {
-      ...character,
-      createdAt: new Date(character.createdAt)
-    } as Character;
-  }
-
-  async updateCharacter(id: number, character: Partial<InsertCharacter>): Promise<Character> {
-    // Primero obtenemos el registro existente para conseguir guildId
-    const existingCharacter = await this.getCharacter(character.guildId, character.userId, character.name);
-    if (!existingCharacter) {
-      throw new Error(`Character with id ${id} not found`);
-    }
-
-    const updateExpressions: string[] = [];
-    const expressionAttributeValues: Record<string, any> = {};
-    const expressionAttributeNames: Record<string, string> = {};
-
-    Object.entries(character).forEach(([key, value]) => {
-      const attributeKey = `:${key}`;
-      const nameKey = `#${key}`;
-      updateExpressions.push(`${nameKey} = ${attributeKey}`);
-      expressionAttributeValues[attributeKey] = value;
-      expressionAttributeNames[nameKey] = key;
-    });
-
-    await docClient.send(
-      new UpdateCommand({
-        TableName: TableNames.CHARACTERS,
-        Key: {
-          guildId: existingCharacter.guildId,
-          characterId: existingCharacter.characterId
-        },
-        UpdateExpression: `set ${updateExpressions.join(', ')}`,
-        ExpressionAttributeValues: expressionAttributeValues,
-        ExpressionAttributeNames: expressionAttributeNames
-      })
-    );
-
-    // Obtener el personaje actualizado
-    const updatedCharacter = await this.getCharacter(existingCharacter.guildId, existingCharacter.userId, existingCharacter.name);
-    if (!updatedCharacter) {
-      throw new Error(`Failed to retrieve updated character with id ${id}`);
-    }
-
-    return updatedCharacter;
-  }
-  
-async deleteCharacter(characterId: string, name: string): Promise<boolean> {
+  async deleteCharacter(characterId: string): Promise<boolean> {
     try {
-        // Realizamos la consulta para buscar el personaje por characterId
-        const response = await docClient.send(
-            new QueryCommand({
-                TableName: TableName.CHARACTERS,
-                IndexName: "characterId", // Usamos el GSI basado en characterId
-                KeyConditionExpression: "#cid = :characterId", // Buscamos por characterId
-                ExpressionAttributeNames: {
-                    "#cid": "characterId" // Mapeamos el atributo characterId
-                },
-                ExpressionAttributeValues: {
-                    ":characterId": characterId // El valor que queremos buscar
-                }
-            })
-        );
-
-        if (!response.Items || response.Items.length === 0) {
-            console.log(Character with characterId "${characterId}" not found.);
-            return false;
-        }
-
-        // Suponemos que el GSI devuelve solo el personaje que estamos buscando
-        const character = response.Items[0];
-
-        // Ahora eliminamos el personaje por su id
-        await docClient.send(
-            new DeleteCommand({
-                TableName: TableName.CHARACTERS,
-                Key: {
-                    guildId: character.guildId, // Usamos guildId de la consulta
-                    id: character.id // Usamos el id del personaje para eliminarlo
-                }
-            })
-        );
-
-        console.log(Character "${name}" deleted successfully.);
-        return true;
-    } catch (error) {
-        console.error("Error deleting character:", error);
-        return false;
-    }
-}
-
-
-
-
-
-/*
-  async deleteCharacter(id: number, guildId: string): Promise<boolean> {
-    try {
-      logger.info('Iniciando eliminación:', {
-        operation: 'DELETE_START',
-        id,
-        guildId
-      });
-
-      // Primero obtenemos todos los personajes del servidor
-      const characters = await this.getCharacters(guildId);
-      
-      // Buscamos el personaje específico por id
-      const character = characters.find(c => c.id === id);
-
+      const character = await this.getCharacterById(characterId);
       if (!character) {
-        logger.error('No se encontró el personaje:', {
-          operation: 'DELETE_ERROR',
-          id,
-          reason: 'CHARACTER_NOT_FOUND'
-        });
+        console.error(`Character with characterId "${characterId}" not found.`);
         return false;
       }
-
-      logger.info('Personaje encontrado:', {
-        operation: 'DELETE_FOUND',
-        id,
-        character: JSON.stringify(character, null, 2)
-      });
-
-      // Verificar que tenemos las claves necesarias
-      if (!character.guildId || !character.characterId) {
-        logger.error('Faltan claves necesarias:', {
-          operation: 'DELETE_ERROR',
-          id,
-          guildId: character.guildId,
-          characterId: character.characterId,
-          reason: 'MISSING_KEYS'
-        });
-        return false;
-      }
-
-      // Comando de eliminación usando el id como clave de partición
-      const deleteCommand = new DeleteCommand({
-        TableName: TableNames.CHARACTERS,
-        Key: {
-          id: character.id,
-          guildId: character.guildId
-        },
-        ConditionExpression: "attribute_exists(id)"
-      });
-
-      logger.info('Ejecutando eliminación:', {
-        operation: 'DELETE_EXECUTE',
-        id,
-        command: JSON.stringify(deleteCommand.input, null, 2)
-      });
-
-      const deleteResult = await docClient.send(deleteCommand);
-
-      logger.info('Personaje eliminado:', {
-        operation: 'DELETE_SUCCESS',
-        id,
-        result: JSON.stringify(deleteResult, null, 2)
-      });
-
+      await docClient.send(
+        new DeleteCommand({ TableName: TableNames.CHARACTERS, Key: { guildId: character.guildId, id: character.id } })
+      );
       return true;
     } catch (error) {
-      logger.error('Error en eliminación:', {
-        operation: 'DELETE_ERROR',
-        id,
-        errorType: error.name,
-        errorMessage: error.message,
-        fullError: JSON.stringify(error, null, 2)
-      });
+      console.error("Error deleting character:", error);
       return false;
     }
   }
-*/
-  private async getUserWalletById(id: number): Promise<UserWallet | undefined> {
-    const response = await docClient.send(
-      new QueryCommand({
-        TableName: TableNames.USER_WALLETS,
-        //IndexName: "IdIndex", //Removed IndexName
-        KeyConditionExpression: "guildId = :guildId AND userId = :userId", //Modified KeyConditionExpression
-        ExpressionAttributeValues: {
-          ":id": id
-        }
-      })
-    );
-
-    return response.Items?.[0] as UserWallet | undefined;
-  }
 }
-// Método auxiliar para obtener character por ID
-async getCharacterById(characterId: string): Promise<any | null> {
-    try {
-        console.log(`Buscando personaje con ID: ${characterId}`);
-
-        // Buscar el personaje con ScanCommand
-        const response = await docClient.send(
-            new ScanCommand({
-                TableName: TableNames.CHARACTERS,
-                FilterExpression: "characterId = :characterId",
-                ExpressionAttributeValues: {
-                    ":characterId": characterId
-                }
-            })
-        );
-
-        console.log("Personajes encontrados:", response.Items);
-
-        if (!response.Items || response.Items.length === 0) {
-            console.error(`Personaje con ID "${characterId}" no encontrado.`);
-            return null;
-        }
-
-        return response.Items[0]; // Retornar el personaje encontrado
-    } catch (error) {
-        console.error("Error buscando personaje:", error);
-        return null;
-    }
-}
-
 
 export const storage = new DynamoDBStorage();
+
