@@ -409,21 +409,46 @@ export class DynamoDBStorage implements IStorage {
   
   async deleteCharacter(guildId: string, name: string): Promise<boolean> {
     try {
-      await docClient.send(
-        new DeleteCommand({
-          TableName: TableNames.CHARACTERS,
-          Key: {
-            guildId: guildId,
-            name: name
-          }
-        })
-      );
-      return true;
+        // Buscar el personaje por nombre y guildId
+        const response = await docClient.send(
+            new QueryCommand({
+                TableName: TableNames.CHARACTERS,
+                KeyConditionExpression: "guildId = :guildId AND #nm = :name",
+                ExpressionAttributeValues: {
+                    ":guildId": guildId,
+                    ":name": name
+                },
+                ExpressionAttributeNames: {
+                    "#nm": "name" // DynamoDB usa 'name' como palabra reservada, por eso la renombramos
+                }
+            })
+        );
+
+        if (!response.Items || response.Items.length === 0) {
+            console.error("Character not found:", name);
+            return false;
+        }
+
+        const characterId = response.Items[0].id; // Suponiendo que el ID es parte del objeto
+
+        // Ahora eliminamos el personaje con su ID
+        await docClient.send(
+            new DeleteCommand({
+                TableName: TableNames.CHARACTERS,
+                Key: {
+                    guildId: guildId,
+                    id: characterId // Eliminamos por ID correcto
+                }
+            })
+        );
+
+        return true;
     } catch (error) {
-      console.error("Error deleting character:", error);
-      return false;
+        console.error("Error deleting character:", error);
+        return false;
     }
-  }
+}
+
 
 /*
   async deleteCharacter(id: number, guildId: string): Promise<boolean> {
