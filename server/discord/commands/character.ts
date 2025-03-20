@@ -1,6 +1,6 @@
 import { Client, SlashCommandBuilder, EmbedBuilder, Collection, MessageFlags } from "discord.js";
 import { storage } from "../../storage";
-import { logger } from '../../logger';
+// import { logger } from '../../logger';
 
 export default function registerCharacterCommands(
   client: Client,
