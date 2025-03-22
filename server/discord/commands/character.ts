@@ -78,7 +78,7 @@ export default function registerCharacterCommands(
     .addStringOption(option =>
       option.setName("n20")
         .setDescription("URL adicional para N20")
-        .setRequired(false)ue));
+        .setRequired(false));
 
   const viewCharactersCommand = new SlashCommandBuilder()
     .setName("ver-personajes")
