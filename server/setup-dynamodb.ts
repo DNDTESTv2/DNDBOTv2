@@ -3,6 +3,51 @@ import { docClient, TableNames } from "./dynamodb";
 
 const tables = [
   {
+    TableName: TableNames.SHOPS,
+    KeySchema: [
+      { AttributeName: "guildId", KeyType: "HASH" as const },
+      { AttributeName: "shopId", KeyType: "RANGE" as const }
+    ],
+    AttributeDefinitions: [
+      { AttributeName: "guildId", AttributeType: "S" as const },
+      { AttributeName: "shopId", AttributeType: "S" as const },
+      { AttributeName: "id", AttributeType: "N" as const },
+      { AttributeName: "userId", AttributeType: "S" as const } // Added userId
+    ],
+    GlobalSecondaryIndexes: [
+      {
+        IndexName: "IdIndex",
+        KeySchema: [
+          { AttributeName: "id", KeyType: "HASH" as const }
+        ],
+        Projection: {
+          ProjectionType: "ALL" as const
+        },
+        ProvisionedThroughput: {
+          ReadCapacityUnits: 5,
+          WriteCapacityUnits: 5
+        }
+      },
+      {
+        IndexName: "UserIndex",
+        KeySchema: [
+          { AttributeName: "userId", KeyType: "HASH" as const }
+        ],
+        Projection: {
+          ProjectionType: "ALL" as const
+        },
+        ProvisionedThroughput: {
+          ReadCapacityUnits: 5,
+          WriteCapacityUnits: 5
+        }
+      }
+    ],
+    ProvisionedThroughput: {
+      ReadCapacityUnits: 5,
+      WriteCapacityUnits: 5
+    }
+  },
+  {
     TableName: TableNames.CURRENCIES,
     KeySchema: [
       { AttributeName: "guildId", KeyType: "HASH" as const },
@@ -133,6 +178,21 @@ const tables = [
           WriteCapacityUnits: 5
         }
       }
+    ],
+    ProvisionedThroughput: {
+      ReadCapacityUnits: 5,
+      WriteCapacityUnits: 5
+    }
+  },
+  {
+    TableName: TableNames.REPUTATION,
+    KeySchema: [
+      { AttributeName: "userId", KeyType: "HASH" as const },
+      { AttributeName: "guildId", KeyType: "RANGE" as const }
+    ],
+    AttributeDefinitions: [
+      { AttributeName: "userId", AttributeType: "S" as const },
+      { AttributeName: "guildId", AttributeType: "S" as const }
     ],
     ProvisionedThroughput: {
       ReadCapacityUnits: 5,

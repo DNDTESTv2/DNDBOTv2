@@ -1,67 +1,65 @@
-import { Client, Events, GatewayIntentBits, Collection, RESTPostAPIChatInputApplicationCommandsJSONBody } from "discord.js";
-import { registerAdminCommands } from "./commands/admin";
+import { Client, Events, GatewayIntentBits, Collection, RESTPostAPIChatInputApplicationCommandsJSONBody, REST, Routes } from "discord.js";
+import { registerAdminCommands, hardReset, handleHardReset } from "./commands/admin";
 import registerCurrencyCommands from "./commands/currency";
 import registerCharacterCommands from "./commands/character";
 import registerMoneyCommands from "./commands/money";
-import { hardReset, handleHardReset } from "./commands/admin";
+import registerEventCommands from "./commands/event";
+import { setupMeCommand } from "./commands/me";
+import configureShopCommands from "./commands/shop";
+import registerDiceCommands from "./commands/dice";
+import registerWeatherCommands from "./commands/weather";
+import registerReputationCommands from "./commands/reputation";
 
 export function setupBot(token: string) {
   const client = new Client({
     intents: [
       GatewayIntentBits.Guilds,
       GatewayIntentBits.GuildMessages,
-    ],
+      GatewayIntentBits.MessageContent
+    ]
   });
 
   const commands = new Collection<string, RESTPostAPIChatInputApplicationCommandsJSONBody>();
 
-  registerAdminCommands(client, commands);
-  registerCurrencyCommands(client, commands);
-  registerCharacterCommands(client, commands);
+  // Registrar comandos en la colección
   registerMoneyCommands(client, commands);
-  commands.set(hardReset.name, hardReset.toJSON());
+  registerEventCommands(client, commands);
+  configureShopCommands(client, commands);
+  registerDiceCommands(client, commands);
+  registerCurrencyCommands(client, commands);
+  registerWeatherCommands(client, commands);
+  registerReputationCommands(client, commands);
 
-  client.once(Events.ClientReady, async c => {
+  setupMeCommand(client, commands);
+  registerAdminCommands(client, commands);
+  registerCharacterCommands(client, commands);
+
+  // Registrar comandos una sola vez al iniciar
+  client.once(Events.ClientReady, async (c) => {
     console.log(`¡Bot listo! Conectado como ${c.user?.tag}`);
     console.log(`Link de invitación: https://discord.com/api/oauth2/authorize?client_id=${c.user?.id}&permissions=2147485696&scope=bot%20applications.commands`);
 
     try {
-      // Registrar comandos en cada guild usando Array.from() para evitar el error de iteración
-      for (const guild of Array.from(client.guilds.cache.values())) {
-        try {
-          const registeredCommands = await guild.commands.set(
-            Array.from(commands.values())
-          );
-          console.log(`✅ Comandos registrados en ${guild.name} (${registeredCommands.size} comandos)`);
-        } catch (error) {
-          console.error(`❌ Error al registrar comandos en ${guild.name}:`, error);
-        }
-      }
-    } catch (error) {
-      console.error("Error general al registrar comandos:", error);
-    }
-  });
+      const rest = new REST().setToken(client.token!);
+      console.log('Iniciando registro de comandos...');
 
-  // Registrar comandos al unirse a un nuevo servidor
-  client.on(Events.GuildCreate, async guild => {
-    try {
-      const registeredCommands = await guild.commands.set(
-        Array.from(commands.values())
+      // Registrar comandos globalmente para la aplicación
+      await rest.put(
+        Routes.applicationCommands(c.user.id),
+        { body: Array.from(commands.values()) }
       );
-      console.log(`✅ Comandos registrados en nuevo servidor ${guild.name} (${registeredCommands.size} comandos)`);
+
+      console.log("✓ Bot listo para recibir comandos");
     } catch (error) {
-      console.error(`❌ Error al registrar comandos en nuevo servidor ${guild.name}:`, error);
+      console.error('Error registrando comandos:', error);
     }
   });
 
-  // Add hard-reset command handler
-  client.on("interactionCreate", async interaction => {
-    if (!interaction.isChatInputCommand()) return;
-    if (interaction.commandName === "hard-reset") {
-      await handleHardReset(interaction);
-    }
+  client.on('guildCreate', async (guild) => {
+    console.log(`Bot añadido al servidor: ${guild.name}`);
   });
 
+  // Event handlers
   client.login(token);
   return client;
 }

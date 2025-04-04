@@ -1,0 +1,44 @@
+❌ Error creando tabla rpg_bot_reputation: ValidationException: One or more parameter values were invalid: Number of attributes in KeySchema does not exactly match number of attributes defined in AttributeDefinitions
+    at throwDefaultError (/home/runner/workspace/node_modules/@smithy/smithy-client/dist-cjs/index.js:867:20)
+    at /home/runner/workspace/node_modules/@smithy/smithy-client/dist-cjs/index.js:876:5
+    at de_CommandError (/home/runner/workspace/node_modules/@aws-sdk/client-dynamodb/dist-cjs/index.js:2308:14)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /home/runner/workspace/node_modules/@smithy/middleware-serde/dist-cjs/index.js:35:20
+    at async /home/runner/workspace/node_modules/@smithy/core/dist-cjs/index.js:167:18
+    at async /home/runner/workspace/node_modules/@smithy/middleware-retry/dist-cjs/index.js:321:38
+    at async /home/runner/workspace/node_modules/@aws-sdk/middleware-logger/dist-cjs/index.js:33:22
+    at async setupTables (/home/runner/workspace/server/setup-dynamodb.ts:234:7)
+    at async <anonymous> (/home/runner/workspace/server/index.ts:70:5) {
+  '$fault': 'client',
+  '$metadata': {
+    httpStatusCode: 400,
+    requestId: 'C2I9C8RAI2D76ESJSUAB41BF8JVV4KQNSO5AEMVJF66Q9ASUAAJG',
+    extendedRequestId: undefined,
+    cfId: undefined,
+    attempts: 1,
+    totalRetryDelay: 0
+  },
+  __type: 'com.amazon.coral.validate#ValidationException'
+}
+❌ Error fatal durante el inicio de la aplicación: ValidationException: One or more parameter values were invalid: Number of attributes in KeySchema does not exactly match number of attributes defined in AttributeDefinitions
+    at throwDefaultError (/home/runner/workspace/node_modules/@smithy/smithy-client/dist-cjs/index.js:867:20)
+    at /home/runner/workspace/node_modules/@smithy/smithy-client/dist-cjs/index.js:876:5
+    at de_CommandError (/home/runner/workspace/node_modules/@aws-sdk/client-dynamodb/dist-cjs/index.js:2308:14)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /home/runner/workspace/node_modules/@smithy/middleware-serde/dist-cjs/index.js:35:20
+    at async /home/runner/workspace/node_modules/@smithy/core/dist-cjs/index.js:167:18
+    at async /home/runner/workspace/node_modules/@smithy/middleware-retry/dist-cjs/index.js:321:38
+    at async /home/runner/workspace/node_modules/@aws-sdk/middleware-logger/dist-cjs/index.js:33:22
+    at async setupTables (/home/runner/workspace/server/setup-dynamodb.ts:234:7)
+    at async <anonymous> (/home/runner/workspace/server/index.ts:70:5) {
+  '$fault': 'client',
+  '$metadata': {
+    httpStatusCode: 400,
+    requestId: 'C2I9C8RAI2D76ESJSUAB41BF8JVV4KQNSO5AEMVJF66Q9ASUAAJG',
+    extendedRequestId: undefined,
+    cfId: undefined,
+    attempts: 1,
+    totalRetryDelay: 0
+  },
+  __type: 'com.amazon.coral.validate#ValidationException'
+}

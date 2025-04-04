@@ -1,0 +1,48 @@
+(node:3088) Warning: Supplying "ephemeral" for interaction response options is deprecated. Utilize flags instead.
+(Use `node --trace-warnings ...` to show where the warning was created)
+node:events:496
+      throw er; // Unhandled 'error' event
+      ^
+
+DiscordAPIError[10062]: Unknown interaction
+    at handleErrors (/home/runner/workspace/node_modules/@discordjs/rest/src/lib/handlers/Shared.ts:148:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async BurstHandler.runRequest (/home/runner/workspace/node_modules/@discordjs/rest/src/lib/handlers/BurstHandler.ts:144:20)
+    at async _REST.request (/home/runner/workspace/node_modules/@discordjs/rest/src/lib/REST.ts:210:20)
+    at async ChatInputCommandInteraction.reply (/home/runner/workspace/node_modules/discord.js/src/structures/interfaces/InteractionResponses.js:194:22)
+    at async Client.<anonymous> (/home/runner/workspace/server/discord/commands/admin.ts:273:9)
+Emitted 'error' event on Client instance at:
+    at emitUnhandledRejectionOrErr (node:events:401:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:84:21) {
+  requestBody: {
+    files: [],
+    json: {
+      type: 4,
+      data: {
+        content: 'No tienes permiso para usar este comando',
+        tts: false,
+        nonce: undefined,
+        enforce_nonce: false,
+        embeds: undefined,
+        components: undefined,
+        username: undefined,
+        avatar_url: undefined,
+        allowed_mentions: undefined,
+        flags: 64,
+        message_reference: undefined,
+        attachments: undefined,
+        sticker_ids: undefined,
+        thread_name: undefined,
+        applied_tags: undefined,
+        poll: undefined
+      }
+    }
+  },
+  rawError: { message: 'Unknown interaction', code: 10062 },
+  code: 10062,
+  status: 404,
+  method: 'POST',
+  url: 'https://discord.com/api/v10/interactions/1355995056724775082/aW50ZXJhY3Rpb246MTM1NTk5NTA1NjcyNDc3NTA4MjpuZjNoS0tjRENLQU5PQWxjZkExUzZmNWZHR21halJwN21aTVJoZ3NwTkcyMFRTSmVpNmllNFpNQWdtajh4TjZ5akRSdG9EUngzVHRVeVBrbjJvZHNXYnZrUGRIM3ZOeFBLSlZYalpDUEQ2SkpnQ2oxa2E3U01YZzhvcGd1QzE3UA/callback?with_response=false'
+}
+
+Node.js v20.18.1

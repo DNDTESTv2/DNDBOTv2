@@ -1,0 +1,63 @@
+Error en comando cobrar: DiscordAPIError[10062]: Unknown interaction
+    at handleErrors (/home/runner/workspace/node_modules/@discordjs/rest/src/lib/handlers/Shared.ts:148:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async BurstHandler.runRequest (/home/runner/workspace/node_modules/@discordjs/rest/src/lib/handlers/BurstHandler.ts:144:20)
+    at async _REST.request (/home/runner/workspace/node_modules/@discordjs/rest/src/lib/REST.ts:210:20)
+    at async ChatInputCommandInteraction.reply (/home/runner/workspace/node_modules/discord.js/src/structures/interfaces/InteractionResponses.js:194:22)
+    at async Client.<anonymous> (/home/runner/workspace/server/discord/commands/admin.ts:211:9) {
+  requestBody: { files: [], json: { type: 4, data: [Object] } },
+  rawError: { message: 'Unknown interaction', code: 10062 },
+  code: 10062,
+  status: 404,
+  method: 'POST',
+  url: 'https://discord.com/api/v10/interactions/1355961666491383950/aW50ZXJhY3Rpb246MTM1NTk2MTY2NjQ5MTM4Mzk1MDpjWWE5MVRlM0JiNmFRd2RSdGxZMHY0Q3g0V3hnTEw4dUN0N1RJNkNRNTlWUjV2MExsb1hQRnJOTEJ4a3dVdDdZcGxyYUh1R0M5Q21wV1R3QndGWmJ4SDRpMktwT2h3V0FwTFN4S2JNMnJDSWpqRllheXp5Y09hbXBSMzRKeVJwVQ/callback?with_response=false'
+}
+node:events:496
+      throw er; // Unhandled 'error' event
+      ^
+
+DiscordAPIError[40060]: Interaction has already been acknowledged.
+    at handleErrors (/home/runner/workspace/node_modules/@discordjs/rest/src/lib/handlers/Shared.ts:148:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async BurstHandler.runRequest (/home/runner/workspace/node_modules/@discordjs/rest/src/lib/handlers/BurstHandler.ts:144:20)
+    at async _REST.request (/home/runner/workspace/node_modules/@discordjs/rest/src/lib/REST.ts:210:20)
+    at async ChatInputCommandInteraction.reply (/home/runner/workspace/node_modules/discord.js/src/structures/interfaces/InteractionResponses.js:194:22)
+    at async Client.<anonymous> (/home/runner/workspace/server/discord/commands/admin.ts:264:9)
+Emitted 'error' event on Client instance at:
+    at emitUnhandledRejectionOrErr (node:events:401:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:84:21) {
+  requestBody: {
+    files: [],
+    json: {
+      type: 4,
+      data: {
+        content: 'Ocurrió un error al procesar el cobro',
+        tts: false,
+        nonce: undefined,
+        enforce_nonce: false,
+        embeds: undefined,
+        components: undefined,
+        username: undefined,
+        avatar_url: undefined,
+        allowed_mentions: undefined,
+        flags: 64,
+        message_reference: undefined,
+        attachments: undefined,
+        sticker_ids: undefined,
+        thread_name: undefined,
+        applied_tags: undefined,
+        poll: undefined
+      }
+    }
+  },
+  rawError: {
+    message: 'Interaction has already been acknowledged.',
+    code: 40060
+  },
+  code: 40060,
+  status: 400,
+  method: 'POST',
+  url: 'https://discord.com/api/v10/interactions/1355961666491383950/aW50ZXJhY3Rpb246MTM1NTk2MTY2NjQ5MTM4Mzk1MDpjWWE5MVRlM0JiNmFRd2RSdGxZMHY0Q3g0V3hnTEw4dUN0N1RJNkNRNTlWUjV2MExsb1hQRnJOTEJ4a3dVdDdZcGxyYUh1R0M5Q21wV1R3QndGWmJ4SDRpMktwT2h3V0FwTFN4S2JNMnJDSWpqRllheXp5Y09hbXBSMzRKeVJwVQ/callback?with_response=false'
+}
+
+Node.js v20.18.1

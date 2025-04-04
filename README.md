@@ -153,20 +153,35 @@ npm run dev
 
 ## 📚 Comandos del Bot
 
-### Personajes
-- `/crear-personaje` - Crea un nuevo personaje
-- `/listar-personajes` - Muestra todos tus personajes
-- `/editar-personaje` - Modifica un personaje existente
+### Comandos de Usuario
+- `/balance` - Muestra tu balance actual, el del banco central y tus deudas
+- `/clima` - Muestra el clima actual
+- `/crear-comercio` - Crea un nuevo comercio
+- `/crear-personaje` - Crea una nueva hoja de personaje
+- `/descontar-dinero` - Descuenta dinero de tu billetera
+- `/editar-personaje` - Edita el nivel o rango de uno de tus personajes
+- `/eliminar-personaje` - Elimina uno de tus personajes
+- `/evento` - Crea un evento
+- `/me` - Realiza una acción con tu personaje
+- `/monedas` - Lista todas las monedas disponibles
+- `/pagar-deuda` - Paga una deuda pendiente
+- `/prestamo` - Solicita un préstamo al banco
+- `/robar` - Intenta robar monedas a otros usuarios (Cada 3 días)
+- `/roll` - Tira uno o más dados
+- `/trabajar` - Trabaja para ganar monedas (Cada 3 días)
+- `/ver-comercios` - Muestra tus comercios
+- `/ver-personajes` - Muestra tus personajes creados
+- `/ver-reputacion` - Muestra la reputación de un usuario
 
-### Economía
-- `/balance` - Muestra tu balance actual
-- `/trabajar` - Gana monedas trabajando
-- `/transferir` - Transfiere monedas a otro usuario
-- `/robar` - Intenta robar monedas (con riesgo)
-
-### Administración
-- `/agregar-dinero` - (Admin) Agrega dinero a un usuario
-- `/descontar-dinero` - (Admin) Descuenta dinero de un usuario
+### Comandos de Administración
+- `/agregar-dinero` - Agrega dinero a la billetera de un usuario (Admin)
+- `/canal-registro` - Establece el canal para registrar transacciones (Admin)
+- `/cobrar` - Cobra impuestos a todos los usuarios (Admin)
+- `/crear-moneda` - Crea una moneda para el servidor (Admin)
+- `/dar-reputacion` - Da puntos de reputación a un usuario (Admin)
+- `/eliminar-moneda` - Elimina una moneda existente en el servidor (Admin)
+- `/hard-reset` - Resetea toda la base de datos (Admin)
+- `/quitar-reputacion` - Quita reputación a un usuario (Admin)
 
 ## 🤝 Contribuir
 

@@ -1,0 +1,27 @@
+Error al crear comercio: Error: Unsupported type passed: Mon Mar 24 2025 01:40:47 GMT+0000 (Coordinated Universal Time). Pass options.convertClassInstanceToMap=true to marshall typeof object as map attribute.
+    at convertToAttr (/home/runner/workspace/node_modules/@aws-sdk/util-dynamodb/dist-cjs/index.js:134:9)
+    at marshall (/home/runner/workspace/node_modules/@aws-sdk/util-dynamodb/dist-cjs/index.js:313:26)
+    at marshallFunc (/home/runner/workspace/node_modules/@aws-sdk/lib-dynamodb/dist-cjs/index.js:131:97)
+    at processObj (/home/runner/workspace/node_modules/@aws-sdk/lib-dynamodb/dist-cjs/index.js:70:14)
+    at /home/runner/workspace/node_modules/@aws-sdk/lib-dynamodb/dist-cjs/index.js:123:28
+    at Array.reduce (<anonymous>)
+    at processAllKeysInObj (/home/runner/workspace/node_modules/@aws-sdk/lib-dynamodb/dist-cjs/index.js:119:30)
+    at processObj (/home/runner/workspace/node_modules/@aws-sdk/lib-dynamodb/dist-cjs/index.js:79:16)
+    at processKeysInObj (/home/runner/workspace/node_modules/@aws-sdk/lib-dynamodb/dist-cjs/index.js:108:28)
+    at marshallInput (/home/runner/workspace/node_modules/@aws-sdk/lib-dynamodb/dist-cjs/index.js:132:10)
+    at /home/runner/workspace/node_modules/@aws-sdk/lib-dynamodb/dist-cjs/index.js:157:22
+    at /home/runner/workspace/node_modules/@aws-sdk/middleware-logger/dist-cjs/index.js:33:28
+    at /home/runner/workspace/node_modules/@aws-sdk/lib-dynamodb/dist-cjs/index.js:559:24
+    at _DynamoDBDocumentClient.send (/home/runner/workspace/node_modules/@smithy/smithy-client/dist-cjs/index.js:128:14)
+    at DynamoDBStorage.createShop (/home/runner/workspace/server/storage.ts:487:21)
+    at Client.<anonymous> (/home/runner/workspace/server/discord/commands/shop.ts:47:34)
+    at Client.emit (node:events:530:35)
+    at InteractionCreateAction.handle (/home/runner/workspace/node_modules/discord.js/src/client/actions/InteractionCreate.js:97:12)
+    at module.exports [as INTERACTION_CREATE] (/home/runner/workspace/node_modules/discord.js/src/client/websocket/handlers/INTERACTION_CREATE.js:4:36)
+    at WebSocketManager.handlePacket (/home/runner/workspace/node_modules/discord.js/src/client/websocket/WebSocketManager.js:348:31)
+    at WebSocketManager.<anonymous> (/home/runner/workspace/node_modules/discord.js/src/client/websocket/WebSocketManager.js:232:12)
+    at WebSocketManager.emit (/home/runner/workspace/node_modules/@vladfrangu/async_event_emitter/src/index.ts:513:28)
+    at WebSocketShard.<anonymous> (/home/runner/workspace/node_modules/@discordjs/ws/src/strategies/sharding/SimpleShardingStrategy.ts:32:47)
+    at WebSocketShard.emit (/home/runner/workspace/node_modules/@vladfrangu/async_event_emitter/src/index.ts:513:28)
+    at WebSocketShard.onMessage (/home/runner/workspace/node_modules/@discordjs/ws/src/ws/WebSocketShard.ts:640:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)

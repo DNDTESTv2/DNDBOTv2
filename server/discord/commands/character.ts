@@ -153,6 +153,18 @@ export default function registerCharacterCommands(
 
     if (interaction.commandName === "crear-personaje") {
       try {
+        // Verificar límite de personajes
+        const characters = await storage.getCharacters(interaction.guildId!);
+        const userCharacters = characters.filter(c => c.userId === interaction.user.id);
+        
+        if (userCharacters.length >= 3) {
+          await interaction.reply({
+            content: "Has alcanzado el límite máximo de 3 personajes. Elimina uno para poder crear otro.",
+            flags: MessageFlags.Ephemeral
+          });
+          return;
+        }
+
         const name = interaction.options.getString("nombre", true);
         const level = interaction.options.getInteger("nivel", true);
         const characterClass = interaction.options.getString("clase", true);
@@ -178,8 +190,8 @@ export default function registerCharacterCommands(
           .setDescription(`**${name}** ha sido agregado a tu colección.`)
           .addFields(
             { name: 'Nivel', value: level.toString(), inline: true },
-            { name: 'Clase', value: characterClass, inline: true },
-            { name: 'Raza', value: race, inline: true },
+            { name: 'Clase', value: characterClass.charAt(0).toUpperCase() + characterClass.slice(1), inline: true },
+            { name: 'Raza', value: race.charAt(0).toUpperCase() + race.slice(1), inline: true },
             { name: 'Rango', value: rank, inline: true },
             { name: 'N20', value: `[Ver en N20](${n20Url})`, inline: false }
           )
@@ -213,8 +225,8 @@ export default function registerCharacterCommands(
           const embed = new EmbedBuilder()
             .setTitle(char.name)
             .addFields(
-              { name: 'Clase', value: char.class, inline: true },
-              { name: 'Raza', value: char.race, inline: true },
+              { name: 'Clase', value: char.class.charAt(0).toUpperCase() + char.class.slice(1), inline: true },
+              { name: 'Raza', value: char.race.charAt(0).toUpperCase() + char.race.slice(1), inline: true },
               { name: 'Nivel', value: char.level.toString(), inline: true },
               { name: 'Rango', value: char.rank, inline: true },
               { name: 'Creado', value: char.createdAt.toLocaleDateString(), inline: true }

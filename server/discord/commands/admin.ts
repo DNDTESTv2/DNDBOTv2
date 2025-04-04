@@ -2,56 +2,7 @@ import { SlashCommandBuilder } from "discord.js";
 import { docClient, TableNames } from "../../dynamodb";
 import { DeleteTableCommand, CreateTableCommand } from "@aws-sdk/client-dynamodb";
 import setupTables from "../../setup-dynamodb";
-
-export const hardReset = new SlashCommandBuilder()
-  .setName("hard-reset")
-  .setDescription("Resetea toda la base de datos (¡Cuidado!)");
-
-export async function handleHardReset(interaction: any) {
-  if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-    await interaction.reply({
-      content: "No tienes permisos para usar este comando",
-      flags: MessageFlags.Ephemeral
-    });
-    return;
-  }
-
-  try {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
-    // Eliminar todas las tablas existentes
-    for (const tableName of Object.values(TableNames)) {
-      try {
-        await docClient.send(new DeleteTableCommand({ TableName: tableName }));
-        await interaction.followUp({
-          content: `Tabla ${tableName} eliminada`,
-          flags: MessageFlags.Ephemeral
-        });
-      } catch (error) {
-        console.error(`Error eliminando tabla ${tableName}:`, error);
-      }
-    }
-
-    // Esperar un momento para asegurar que las tablas se eliminaron
-    await new Promise(resolve => setTimeout(resolve, 5000));
-
-    // Recrear todas las tablas
-    await setupTables();
-
-    await interaction.followUp({
-      content: "¡Reset completado! Todas las tablas han sido recreadas.",
-      flags: MessageFlags.Ephemeral
-    });
-  } catch (error) {
-    console.error("Error en hard-reset:", error);
-    await interaction.followUp({
-      content: "Hubo un error al resetear la base de datos",
-      flags: MessageFlags.Ephemeral
-    });
-  }
-}
-
-import { Client, PermissionFlagsBits, SlashCommandBuilder, ChannelType, TextChannel, ThreadChannel, PermissionsString, Collection, RESTPostAPIChatInputApplicationCommandsJSONBody, MessageFlags } from "discord.js";
+import { Client, PermissionFlagsBits, ChannelType, TextChannel, ThreadChannel, PermissionsString, Collection, RESTPostAPIChatInputApplicationCommandsJSONBody, MessageFlags } from "discord.js";
 import { storage } from "../../storage";
 
 export function registerAdminCommands(
@@ -60,7 +11,7 @@ export function registerAdminCommands(
 ) {
   const createCurrency = new SlashCommandBuilder()
     .setName("crear-moneda")
-    .setDescription("Crea una nueva moneda para el servidor")
+    .setDescription("Crea una nueva moneda para el servidor (Admin)")
     .addStringOption(option =>
       option.setName("nombre")
         .setDescription("Nombre de la moneda")
@@ -73,7 +24,7 @@ export function registerAdminCommands(
 
   const deleteCurrency = new SlashCommandBuilder()
     .setName("eliminar-moneda")
-    .setDescription("Elimina una moneda existente del servidor")
+    .setDescription("Elimina una moneda existente del servidor (Admin)")
     .addStringOption(option =>
       option.setName("nombre")
         .setDescription("Nombre de la moneda a eliminar")
@@ -82,7 +33,7 @@ export function registerAdminCommands(
 
   const setLogChannel = new SlashCommandBuilder()
     .setName("canal-registro")
-    .setDescription("Establece el canal para registrar transacciones")
+    .setDescription("Establece el canal para registrar transacciones (Admin)")
     .addChannelOption(option =>
       option.setName("canal")
         .setDescription("Canal donde se registrarán las transacciones")
@@ -96,10 +47,38 @@ export function registerAdminCommands(
         .setRequired(true))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
-  // Agregar comandos a la colección
+  const cobrarCommand = new SlashCommandBuilder()
+    .setName("cobrar")
+    .setDescription("Cobra un monto a todos los usuarios (Admin)")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .addStringOption(option =>
+      option.setName("moneda")
+        .setDescription("Tipo de moneda")
+        .setRequired(true))
+    .addIntegerOption(option =>
+      option.setName("monto")
+        .setDescription("Monto a cobrar")
+        .setRequired(true)
+        .setMinValue(1));
+
+  const cobrarComercianteCommand = new SlashCommandBuilder()
+    .setName("cobrar-comerciante")
+    .setDescription("Cobra un monto a todos los usuarios con comercios")
+    .addStringOption(option =>
+      option.setName("moneda")
+        .setDescription("Tipo de moneda")
+        .setRequired(true))
+    .addIntegerOption(option =>
+      option.setName("monto")
+        .setDescription("Monto a cobrar")
+        .setRequired(true)
+        .setMinValue(1));
+
   commands.set(createCurrency.name, createCurrency.toJSON());
   commands.set(deleteCurrency.name, deleteCurrency.toJSON());
   commands.set(setLogChannel.name, setLogChannel.toJSON());
+  commands.set(cobrarCommand.name, cobrarCommand.toJSON());
+  commands.set(cobrarComercianteCommand.name, cobrarComercianteCommand.toJSON());
 
   client.on("interactionCreate", async interaction => {
     if (!interaction.isChatInputCommand()) return;
@@ -220,5 +199,141 @@ Si en algún momento dejo de funcionar, por favor verifica estos permisos.`);
         });
       }
     }
+    if (interaction.commandName === "cobrar") {
+      try {
+        const moneda = interaction.options.getString("moneda", true);
+        const cantidad = interaction.options.getInteger("monto", true);
+
+
+        const wallets = await storage.getAllWallets(interaction.guildId!);
+        let cobrados = 0;
+        let errorCount = 0;
+
+        await interaction.reply(`Iniciando cobro de impuestos...`);
+
+        for (const wallet of wallets) {
+          try {
+            // Saltar si es la wallet del bot o si no tiene la moneda
+            if (wallet.userId === interaction.client.user?.id) continue;
+
+            const balance = wallet.wallet[moneda] || 0;
+            if (balance >= cantidad) {
+              const updatedWallet = { ...wallet.wallet };
+              updatedWallet[moneda] = balance - cantidad;
+              await storage.updateUserWallet(wallet.id, updatedWallet);
+              cobrados++;
+            }
+          } catch (error) {
+            console.error("Error al procesar wallet:", error);
+          }
+        }
+
+        // Actualizar la wallet del bot con los impuestos recaudados
+        const botWallet = await storage.getUserWallet(interaction.guildId!, interaction.client.user?.id!);
+        if (botWallet) {
+          const updatedBotWallet = { ...botWallet.wallet };
+          updatedBotWallet[moneda] = (updatedBotWallet[moneda] || 0) + (cobrados * cantidad);
+          await storage.updateUserWallet(botWallet.id, updatedBotWallet);
+        }
+
+
+        const reply = `Cobro completado:\n` +
+          `✅ ${cobrados} usuarios pagaron impuestos\n` +
+          `❌ ${errorCount} errores durante el cobro`;
+        await interaction.editReply(reply);
+
+        // Registrar en el canal de log si está configurado
+        const settings = await storage.getGuildSettings(interaction.guildId!);
+        if (settings?.transactionLogChannel) {
+          const channel = await interaction.guild?.channels.fetch(settings.transactionLogChannel);
+          if (channel?.isTextBased()) {
+            await channel.send(
+              `💰 Cobro de impuestos:\n` +
+              `Administrador: <@${interaction.user.id}>\n` +
+              `Total recaudado: ${cobrados * cantidad} ${moneda}\n` + 
+              `Fecha: ${new Date().toLocaleString()}`
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Error en comando cobrar:", error);
+        await interaction.editReply({
+          content: "Ocurrió un error al procesar el cobro"
+        });
+      }
+    }
+    if (interaction.commandName === "cobrar-comerciante") {
+      if (!interaction.isRepliable()) {
+        return;
+      }
+
+      const isAdmin = interaction.member?.permissions.has(PermissionFlagsBits.Administrator);
+      if (!isAdmin) {
+        await interaction.reply({
+          content: "No tienes permiso para usar este comando",
+          flags: MessageFlags.Ephemeral
+        });
+        return;
+      }
+
+      const moneda = interaction.options.getString("moneda", true);
+      const monto = interaction.options.getInteger("monto", true);
+
+      try {
+        // Obtener todos los comercios y sus dueños únicos
+        const shops = await storage.getShopsByGuild(interaction.guildId!);
+        const uniqueUserIds = [...new Set(shops.map(shop => shop.userId))];
+
+        let totalCobrado = 0;
+        let usuariosCobrados = 0;
+
+        for (const userId of uniqueUserIds) {
+          const wallet = await storage.getUserWallet(interaction.guildId!, userId);
+          if (!wallet) continue;
+
+          const balance = wallet.wallet[moneda] || 0;
+          if (balance >= monto) {
+            const updatedWallet = { ...wallet.wallet };
+            updatedWallet[moneda] = balance - monto;
+            await storage.updateUserWallet(wallet.id, updatedWallet);
+            totalCobrado += monto;
+            usuariosCobrados++;
+          }
+        }
+
+        // Registrar en canal de log si está configurado
+        const settings = await storage.getGuildSettings(interaction.guildId!);
+        if (settings?.transactionLogChannel) {
+          const channel = await interaction.guild?.channels.fetch(settings.transactionLogChannel);
+          if (channel?.isTextBased()) {
+            await channel.send(
+              `💰 Cobro a comerciantes realizado:\n` +
+              `Admin: <@${interaction.user.id}>\n` +
+              `Monto por usuario: ${monto} ${moneda}\n` +
+              `Total cobrado: ${totalCobrado} ${moneda}\n` +
+              `Usuarios cobrados: ${usuariosCobrados}\n` +
+              `Fecha: ${new Date().toLocaleString()}`
+            );
+          }
+        }
+
+        await interaction.reply(
+          `✅ Cobro realizado:\n` +
+          `• Monto por usuario: ${monto} ${moneda}\n` +
+          `• Total cobrado: ${totalCobrado} ${moneda}\n` +
+          `• Usuarios cobrados: ${usuariosCobrados}`
+        );
+      } catch (error) {
+        console.error("Error al cobrar a comerciantes:", error);
+        await interaction.reply({
+          content: "Hubo un error al realizar el cobro",
+          ephemeral: true
+        });
+      }
+      return;
+    }
+
+    // Registrar comandos
+    return commands;
   });
 }

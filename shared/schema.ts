@@ -98,5 +98,44 @@ export type InsertGuildSettings = z.infer<typeof insertGuildSettingsSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 
+export const shops = pgTable("shops", {
+  id: serial("id").primaryKey(),
+  guildId: text("guild_id").notNull(),
+  userId: text("user_id").notNull(),
+  name: text("name").notNull(),
+  type: text("type").notNull(),
+  size: text("size").notNull(),
+  imageUrl: text("image_url"),
+  lastPayout: timestamp("last_payout").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertShopSchema = createInsertSchema(shops).pick({
+  guildId: true,
+  userId: true,
+  name: true,
+  type: true,
+  size: true,
+  imageUrl: true,
+});
+
+export type Shop = typeof shops.$inferSelect;
+export const reputation = pgTable("reputation", {
+  id: serial("id").primaryKey(),
+  guildId: text("guild_id").notNull(),
+  userId: text("user_id").notNull(),
+  points: integer("points").notNull().default(0),
+});
+
+export const insertReputationSchema = createInsertSchema(reputation).pick({
+  guildId: true,
+  userId: true,
+  points: true,
+});
+
+export type InsertShop = z.infer<typeof insertShopSchema>;
+export type Reputation = typeof reputation.$inferSelect;
+export type InsertReputation = z.infer<typeof insertReputationSchema>;
+
 export type Character = typeof characters.$inferSelect;
 export type InsertCharacter = z.infer<typeof insertCharacterSchema>;

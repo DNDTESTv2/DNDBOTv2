@@ -21,9 +21,11 @@ export const docClient = DynamoDBDocumentClient.from(client, {
 
 // Nombres de las tablas
 export const TableNames = {
+  REPUTATION: "rpg_bot_reputation",
   CURRENCIES: "rpg_bot_currencies",
   USER_WALLETS: "rpg_bot_user_wallets",
   GUILD_SETTINGS: "rpg_bot_guild_settings",
   TRANSACTIONS: "rpg_bot_transactions",
-  CHARACTERS: "rpg_bot_characters"
+  CHARACTERS: "rpg_bot_characters",
+  SHOPS: "rpg_bot_shops"
 } as const;
